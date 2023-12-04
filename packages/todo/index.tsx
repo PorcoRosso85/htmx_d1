@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 
-import { renderer, AddTodo, Item } from './components'
+import { AddTodo, Item } from './components'
 
 type Bindings = {
   DB: D1Database
@@ -16,8 +16,6 @@ type Todo = {
 const endpoint = "/todo"
 
 const app = new Hono<{ Bindings: Bindings }>().basePath(endpoint)
-
-app.get('*', renderer)
 
 app.get('/', async (c) => {
   const { results } = await c.env.DB.prepare(`SELECT id, title FROM todo;`).all<Todo>()
@@ -49,7 +47,7 @@ app.post(
   }
 )
 
-app.delete(`${endpoint}/:id`, async (c) => {
+app.delete(`:id`, async (c) => {
   const id = c.req.param('id')
   await c.env.DB.prepare(`DELETE FROM todo WHERE id = ?;`).bind(id).run()
   c.status(200)
