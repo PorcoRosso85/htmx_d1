@@ -13,7 +13,9 @@ type Todo = {
   id: string
 }
 
-const app = new Hono<{ Bindings: Bindings }>()
+const endpoint = "/todo"
+
+const app = new Hono<{ Bindings: Bindings }>().basePath(endpoint)
 
 app.get('*', renderer)
 
@@ -32,7 +34,7 @@ app.get('/', async (c) => {
 })
 
 app.post(
-  '/todo',
+  '/',
   zValidator(
     'form',
     z.object({
@@ -47,11 +49,15 @@ app.post(
   }
 )
 
-app.delete('/todo/:id', async (c) => {
+app.delete(`${endpoint}/:id`, async (c) => {
   const id = c.req.param('id')
   await c.env.DB.prepare(`DELETE FROM todo WHERE id = ?;`).bind(id).run()
   c.status(200)
   return c.body(null)
 })
 
-export default app
+export const todoHonoApp = {
+  endpoint: endpoint,
+  app: app
+
+}
