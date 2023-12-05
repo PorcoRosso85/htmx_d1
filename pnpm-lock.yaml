@@ -34,14 +34,22 @@ importers:
         specifier: ^3.11.0
         version: 3.18.0
 
+  packages/config: {}
+
   packages/join:
     dependencies:
+      '@quantic/config':
+        specifier: workspace:^
+        version: link:../config
       sql-template-tag:
         specifier: ^5.2.0
         version: 5.2.0
 
   packages/todo:
     dependencies:
+      '@quantic/config':
+        specifier: workspace:^
+        version: link:../config
       sql-template-tag:
         specifier: ^5.2.0
         version: 5.2.0

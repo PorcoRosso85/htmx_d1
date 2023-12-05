@@ -3,10 +3,13 @@ import { Hono } from 'hono'
 import { joinHonoApp } from '@quantic/join'
 import { html } from 'hono/html'
 import { renderer } from './renderer'
+import { logger } from 'hono/logger'
 
 const app = new Hono()
 
 app
+  .use('*', logger())
+
   .get('*', renderer)
 
   .get('/', (c) =>

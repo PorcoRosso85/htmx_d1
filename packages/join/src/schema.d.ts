@@ -1,7 +1,4 @@
-export type Bindings = {
-  D1DB: D1Database
-}
-
+// for join table
 export type UserBasic = {
   id: string
   name: string

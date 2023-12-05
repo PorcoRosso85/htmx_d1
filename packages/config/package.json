@@ -1,5 +1,5 @@
 {
-  "name": "@quantic/join",
+  "name": "@quantic/config",
   "version": "1.0.0",
   "description": "",
   "main": "./src/index.ts",
@@ -8,9 +8,5 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT",
-  "dependencies": {
-    "@quantic/config": "workspace:^",
-    "sql-template-tag": "^5.2.0"
-  }
+  "license": "MIT"
 }

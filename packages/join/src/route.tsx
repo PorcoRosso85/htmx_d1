@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
-import { Bindings, UserBasic, UserContact } from './bindings'
 import sql from 'sql-template-tag'
+import { UserBasic, UserContact } from './schema'
+import { Bindings } from '@quantic/config'
 
 const endpoint = '/join'
 
@@ -17,7 +18,7 @@ app.use('*', logger())
   // console.debug(await c.env.DB.prepare(sql``))
   const id = crypto.randomUUID()
   const username = 'test'
-  await c.env.D1DB.prepare(sql`INSERT INTO user_basic_info(id, name) VALUES(?, ?)`.sql)
+  await c.env.D1DB.prepare(sql`INSERT INTO user_basic_info(id, username) VALUES(?, ?)`.sql)
     .bind(id, username)
     .run()
   const { results } = await c.env.D1DB.prepare(
@@ -26,7 +27,6 @@ app.use('*', logger())
   console.debug('results: ', results)
   return c.render(
     <>
-      {console.debug(results)}
       {results.map((result) => (
         <p>
           ID: {result.id}, Name: {result.name}, Birthdate:{' '}
