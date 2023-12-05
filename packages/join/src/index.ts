@@ -1,3 +1,6 @@
-import { joinHonoApp } from "./route";
+import { joinHonoApp } from './route'
 
 export { joinHonoApp }
+
+// if run wrangler for only this package
+export default joinHonoApp.app

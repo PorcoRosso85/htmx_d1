@@ -13,10 +13,12 @@
   "dependencies": {
     "@hono/zod-validator": "^0.1.9",
     "@quantic/join": "workspace:^",
+    "@quantic/todo": "workspace:^",
     "hono": "^3.8.0-rc.2",
     "zod": "^3.21.4"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.4.1",
     "@cloudflare/workers-types": "^4.20231002.0",
     "wrangler": "^3.11.0"
   }
