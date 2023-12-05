@@ -1,0 +1,107 @@
+<html>
+  <head>
+    <!-- ... -->
+    <script src="./packages/sqlite-wasm/jswasm/sqlite3.js"></script>
+    <!-- ... -->
+  </head>
+
+  <body>
+    <p>hi</p>
+    <script>
+      const initSqlite3 = async () => {
+        const sqlite3 = await self["sqlite3InitModule"]();
+        self["sqlite3"] = sqlite3;
+        return sqlite3;
+      };
+
+      initSqlite3().then((s) => {
+        sqlite3 = s;
+        console.log("sqlite3:", sqlite3);
+        console.log("sqlite3", self["sqlite3"]);
+        console.log("sqlite3 version", sqlite3.capi.sqlite3_libversion());
+        const createDatabase = (filename = ":memory:", flags = "c") =>
+          new self["sqlite3"].oo1.DB({ filename, flags });
+
+        const db = createDatabase(":memory:", "ct");
+        console.debug("db", db.filename);
+
+        const createTable = (db, tableName) =>
+          db.exec({
+            sql: `CREATE TABLE IF NOT EXISTS "${tableName}"(a,b)`,
+          });
+
+        const tableName = "myfirsttable";
+        const tbl = createTable(db, tableName);
+        console.debug("tbl", tbl);
+
+        const insertData = (db, tableName, data) =>
+          db.exec({
+            sql: `INSERT INTO "${tableName}" VALUES(?,?)`,
+            bind: data,
+          });
+
+        const rand = (max) => Math.floor(Math.random() * max);
+
+        const addFakeData = (tableName) => {
+          let i = 0;
+          for (i = 20; i <= 25; ++i) {
+            insertData(db, tableName, [rand(100), rand(100)]);
+          }
+        };
+
+        addFakeData(tableName);
+
+        const readData = (db, tableName, callback) =>
+          db.exec({
+            sql: `SELECT * FROM "${tableName}"`,
+            rowMode: "array",
+            callback,
+          });
+
+        const getFakeData = (db, tableName) => {
+          let result = [];
+          db.exec({
+            sql: `select a as aa, b as bb from "${tableName}" order by aa limit 10`,
+            rowMode: "object",
+            callback: function (row) {
+              console.log("row ", ++this.counter, "=", JSON.stringify(row));
+              result = [...result, row];
+            }.bind({ counter: 0 }),
+          });
+
+          return result;
+        };
+
+        console.debug("getFakeData: ", getFakeData(db, tableName));
+
+        const byteArray = self["sqlite3"].capi.sqlite3_js_db_export(db.pointer);
+
+        const blob = new Blob([byteArray.buffer], {
+          type: "application/x-sqlite3",
+        });
+
+        const downloadDB = (db) => {
+          const byteArray = self["sqlite3"].capi.sqlite3_js_db_export(
+            db.pointer
+          );
+
+          const blob = new Blob([byteArray.buffer], {
+            type: "application/x-sqlite3",
+          });
+          const a = document.createElement("a");
+          document.body.appendChild(a);
+          a.href = window.URL.createObjectURL(blob);
+          a.download = db.filename.split("/").pop() || db.name;
+          a.addEventListener("click", function () {
+            setTimeout(function () {
+              console.log("Exported (possibly auto-downloaded) database");
+              window.URL.revokeObjectURL(a.href);
+              a.remove();
+            }, 500);
+          });
+          a.click();
+        };
+      });
+    </script>
+  </body>
+</html>
