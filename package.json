@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@hono/zod-validator": "^0.1.9",
+    "@quantic/durable-objects": "workspace:^",
+    "@quantic/insentive": "workspace:^",
     "@quantic/join": "workspace:^",
     "@quantic/todo": "workspace:^",
     "hono": "^3.8.0-rc.2",

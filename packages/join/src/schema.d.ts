@@ -1,7 +1,7 @@
 // for join table
 export type UserBasic = {
   id: string
-  name: string
+  username: string
   birthdate: Date
 }
 
@@ -10,3 +10,5 @@ export type UserContact = {
   email: string
   phone: string
 }
+
+export type User = UserBasic & UserContact

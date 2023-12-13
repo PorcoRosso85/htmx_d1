@@ -1,3 +1,1 @@
-import { todoHonoApp } from './route'
-
-export { todoHonoApp }
+export { todoHonoApp } from './route'

@@ -1,7 +1,7 @@
-import { Hono } from 'hono'
-import { z } from 'zod'
 import { zValidator } from '@hono/zod-validator'
 import { Bindings } from '@quantic/config'
+import { Hono } from 'hono'
+import { z } from 'zod'
 
 import { AddTodo, Item } from './components'
 
@@ -19,7 +19,7 @@ const app = new Hono<{ Bindings: Bindings }>().basePath(endpoint)
 app.get('/', async (c) => {
   const { results } = await c.env.D1DB.prepare(sql`SELECT id, title FROM todo`.sql).all<Todo>()
   const todos = results
-  return c.render(
+  return c.html(
     <div>
       <AddTodo />
       {todos.map((todo) => {
