@@ -3,6 +3,7 @@ export { Counter } from '@quantic/durable-objects'
 import { insentiveHonoApp } from '@quantic/insentive'
 import { joinHonoApp } from '@quantic/join'
 import { todoHonoApp } from '@quantic/todo'
+import { typeboxHonoApp } from '@quantic/typebox'
 import { Hono } from 'hono'
 import { html } from 'hono/html'
 import { logger } from 'hono/logger'
@@ -45,6 +46,7 @@ app
                           <button type="button" hx-get="/join">join</button>
                           <button type="button" hx-get="/insentive">insentive</button>
                           <button type="button" hx-get="/do">do</button>
+                          <button type="button" hx-get=${typeboxHonoApp.endpoint}>typebox</button>
                           <div />
           </div>
           `),
@@ -54,5 +56,6 @@ app
   .route('/', joinHonoApp.app)
   .route('/', insentiveHonoApp.app)
   .route('/', doHonoApp.app)
+  .route('/', typeboxHonoApp.app)
 
 export default app
