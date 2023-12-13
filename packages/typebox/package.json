@@ -8,5 +8,10 @@
   },
   "keywords": [],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@hono/typebox-validator": "^0.2.2",
+    "@por85/htmx": "^1.0.0",
+    "@sinclair/typebox": "^0.31.28"
+  }
 }
