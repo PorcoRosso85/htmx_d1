@@ -41,7 +41,7 @@ app
 
   .get('/', (c) =>
     c.render(html`
-           <div hx-boost="true" hx-ext="debug" hx-target="next div">
+           <div hx-boost="true" hx-target="next div">
                           <button type="button" hx-get="/todo">todo</button>
                           <button type="button" hx-get="/join">join</button>
                           <button type="button" hx-get="/insentive">insentive</button>
