@@ -33,7 +33,7 @@
       "type": "node",
       "request": "launch",
       "resolveSourceMapLocations": ["**", "!**/node_modules/**"], //This is key, the source maps to resolve end up located in your temp directory, and vscode by default only looks in your workspace directory. You can also set this to null or an empty array, but source maps in node_modules might get evaluated which may slow you down significantly unless you specifically want to debug those.
-      "runtimeExecutable": "pnpm",
+      "runtimeExecutable": "/home/user/pjs/node/.devbox/nix/profile/default/bin/pnpm",
       "runtimeArgs": ["dev"],
       "skipFiles": ["<node_internals>/**"],
       "internalConsoleOptions": "neverOpen",
