@@ -1,6 +1,6 @@
 const CACHE_NAME = 'v1'
 const urlsToCache = [
-  'localhost:8787',
+  '/',
   'https://unpkg.com/htmx.org@1.9.9',
   'https://unpkg.com/htmx.org/dist/ext/debug.js',
   // 'https://cdn.tailwindcss.com',
