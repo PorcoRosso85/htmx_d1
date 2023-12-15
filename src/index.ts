@@ -22,9 +22,8 @@ app
           <html>
             <head>
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-              <script src="https://unpkg.com/htmx.org@1.9.3"></script>
+              <script src="https://unpkg.com/htmx.org@1.9.9"></script>
               <script src="https://unpkg.com/htmx.org/dist/ext/debug.js"></script>
-              <script src="https://unpkg.com/hyperscript.org@0.9.9"></script>
               <script src="https://cdn.tailwindcss.com"></script>
               <title>Hono + htmx</title>
             </head>
@@ -34,7 +33,7 @@ app
               </div>
               <script>
                 if ('serviceWorker' in navigator) {
-                  navigator.serviceWorker.register('/static/sw.js').then(function(registration) {
+                  navigator.serviceWorker.register('/static/sw.js', {scope: '/'}).then(function(registration) {
                     // 登録成功
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
                   }).catch(function(error) {
@@ -64,7 +63,20 @@ app
           `),
   )
 
+  // .get('/static/*', serveStatic({ root: './' }), (c) => {
+  //   c.header('Service-Worker-Allowed', '/')
+  //   return c.text("sw is scoped on '/'", 201, {
+  //     'Service-Worker-Allowed': '/',
+  //   })
+  // })
+
+  .use('/static/*', async (c, next) => {
+    c.header('Service-Worker-Allowed', '/')
+    await next()
+  })
+
   .get('/static/*', serveStatic({ root: './' }))
+
   .get('/favicon', serveStatic({ path: './favicon.ico' }))
 
   .route('/', todoHonoApp.app)
