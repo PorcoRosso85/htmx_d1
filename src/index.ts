@@ -1,4 +1,5 @@
 import { doHonoApp } from '@quantic/durable-objects'
+import { serveStatic } from 'hono/cloudflare-workers'
 export { Counter } from '@quantic/durable-objects'
 import { insentiveHonoApp } from '@quantic/insentive'
 import { joinHonoApp } from '@quantic/join'
@@ -31,6 +32,17 @@ app
               <div class="p-4">
                 ${children}
               </div>
+              <script>
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.register('/static/sw.js').then(function(registration) {
+                    // 登録成功
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  }).catch(function(error) {
+                    // 登録失敗
+                    console.log('ServiceWorker registration failed: ', error);
+                  });
+                }
+              </script>
             </body>
           </html>
         `,
@@ -51,6 +63,9 @@ app
           </div>
           `),
   )
+
+  .get('/static/*', serveStatic({ root: './' }))
+  .get('/favicon', serveStatic({ path: './favicon.ico' }))
 
   .route('/', todoHonoApp.app)
   .route('/', joinHonoApp.app)
