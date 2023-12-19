@@ -10,6 +10,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@quantic/config": "workspace:^"
+    "@quantic/config": "workspace:^",
+    "@sinclair/typebox": "^0.31.28"
+  },
+  "devDependencies": {
+    "miniflare": "^3.20231030.4"
   }
 }
