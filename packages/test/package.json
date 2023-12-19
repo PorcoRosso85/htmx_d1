@@ -1,5 +1,5 @@
 {
-  "name": "@quantic/typebox",
+  "name": "@quantic/test",
   "version": "1.0.0",
   "description": "",
   "main": "./src/index.ts",
@@ -10,9 +10,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@hono/typebox-validator": "^0.2.2",
-    "@por85/htmx": "^1.0.0",
-    "@sinclair/typebox": "^0.31.28",
-    "form-data": "^4.0.0"
+    "@hono/typebox-validator": "^0.2.2"
   }
 }

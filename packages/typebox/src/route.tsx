@@ -49,11 +49,21 @@ app
   )
 
   .post(
+    `${endpoints.user}`,
+    tbValidator('form', userSchema, (result, c) => {
+      return c.html('valid')
+    }),
+    async (c) => {
+      const { userId, name, email } = await c.req.parseBody()
+      return c.html(`id: ${userId} name: ${name} email: ${email}`)
+    },
+  )
+
+  .post(
     `${endpoints.user}/:validation/:item`,
     tbValidator('form', userSchema, (result, c) => {
       // TODO : not working
       if (!result.success) {
-        console.log('invalid response, 400')
         c.header('Content-Type', 'text/html')
         c.status(400)
         return c.html('invalid to input rules')
@@ -86,38 +96,65 @@ const typeboxHonoApp = {
 
 export { typeboxHonoApp }
 
-/**
- * 
-This snippet differ to example of this middleware, but mostly same are these I think.
-If `form` request also accept tbValidator, how can I return html like inside `if` scope?
+if (import.meta.vitest) {
+  const { describe, test, expect } = import.meta.vitest
+  const FormData = require('form-data')
 
-```
-...
+  describe('get /typebox', () => {
+    test('status 200', async () => {
+      const res = await typeboxHonoApp.app.request('/typebox', { method: 'GET' })
+      expect(res.status).toBe(200)
+    })
 
-const user = T.Object({
-  userId: T.String({ minLength: 3, maxLength: 16 }),
-  name: T.String({ minLength: 2, maxLength: 16 }),
-  email: T.String(),
-})
+    describe('post /user', () => {
+      describe('/', () => {
+        test.skip('status 200', async () => {
+          // TODO: https://chat.openai.com/c/c0b5f9c8-95b3-448c-b48f-fd749732a87a
+          const formData = new FormData()
+          formData.append('userId', 'aaa')
+          formData.append('name', 'aa')
+          formData.append('email', 'a')
+          console.debug('formData', formData._streams)
 
-...
+          const res = await typeboxHonoApp.app.request('/typebox/user', {
+            method: 'POST',
+            body: formData,
+          })
+          expect(res.status).toBe(200)
+        })
+      })
 
-  .post(
-    "/user",
-    tbValidator('form', user, (result, c) => {
-      // TODO : not working
-      if (!result.success) {
-        console.debug('invalid, 400')
-        return c.html('invalid', 400)
-      }
-    }),
-    (c) => {
-      const { userId, name, email } = c.req.valid('form')
-      console.debug('id: ', userId, 'name: ', name, 'email: ', email)
-      
-      ...
+      describe('/:validation/:item', () => {
+        test.skip('status 200 validated', async () => {
+          const formData = new FormData()
+          formData.append('userId', 'aaa')
+          formData.append('name', 'aa')
+          formData.append('email', 'a')
+          // console.debug('formData', formData)
 
-    },
-  
-```
- */
+          const res = await typeboxHonoApp.app.request('/typebox/user/1/1', { method: 'POST' })
+          expect(res.status).toBe(200)
+        })
+
+        test('no input return 400', async () => {
+          const formData = new FormData()
+          const res = await typeboxHonoApp.app.request('/typebox/user/1/1', { method: 'POST' })
+          expect(res.status).toBe(400)
+        })
+
+        // TODO: return 200
+        test('invalid input request return 400', async () => {
+          const formData = new FormData()
+          formData.append('userId', 'aaa')
+          formData.append('name', 'aa')
+          formData.append('email', 'a')
+          const res = await typeboxHonoApp.app.request('/typebox/user/1/1', {
+            method: 'POST',
+            body: formData,
+          })
+          expect(res.status).toBe(400)
+        })
+      })
+    })
+  })
+}
