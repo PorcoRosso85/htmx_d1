@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS root;
+CREATE TABLE IF NOT EXISTS root (ID INTEGER PRIMARY KEY, Name TEXT, Email TEXT);
+INSERT INTO root (ID, Name, Email) VALUES (01, 'Tom', 'tom@example.com');
