@@ -1,0 +1,1 @@
+export { errorHonoApp } from './route'
