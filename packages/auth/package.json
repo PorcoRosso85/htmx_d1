@@ -11,7 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "@quantic/error": "workspace:^",
-    "@tsndr/cloudflare-worker-jwt": "^2.3.2"
+    "@quantic/lib": "workspace:^"
   },
   "devDependencies": {
     "vitest": "^1.0.4"

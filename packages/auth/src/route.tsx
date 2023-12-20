@@ -1,8 +1,8 @@
-import jwt from '@tsndr/cloudflare-worker-jwt'
-import { Hono } from 'hono'
+import { Bindings } from '@quantic/lib'
+import { Context, Hono, Next } from 'hono'
+import { cors } from 'hono/cors'
+import { jwt } from 'hono/jwt'
 import { logger } from 'hono/logger'
-import { describe } from 'vitest'
-import { genOTP } from './util'
 
 const endpoint = '/auth'
 
@@ -23,14 +23,21 @@ const endpoints = {
   success: '/success',
 }
 
-const app = new Hono().basePath(endpoint)
+const app = new Hono<{ Bindings: Bindings }>().basePath(endpoint)
 
 app
   .use(logger())
 
+  .use(cors())
+
+  .use('/*', async (c: Context<{ Bindings: Bindings }>, next: Next) =>
+    jwt({ secret: c.env.SECRET_KEY })(c, next),
+  )
+
   .get(endpoints.root, async (c) => {
     // route to 'jwt' or 'auth0/oauth'
-    return c.text('Hello Hono!')
+    const api = c.env.OPENAI_API_KEY
+    return c.text(api)
   })
 
   // .post(endpoints.otp.root, (c) => {
@@ -99,29 +106,3 @@ const authHonoApp = {
 }
 
 export { authHonoApp }
-
-if (import.meta.vitest) {
-  const { test, expect, beforeAll, afterAll, describe } = import.meta.vitest
-  describe('/auth Hello Hono!', () => {
-    test('get /', async () => {
-      const res = await authHonoApp.app.request('/auth')
-      expect(res.status).toBe(200)
-      expect(await res.text()).toBe('Hello Hono!')
-    })
-  })
-
-  describe('/auth/jwt', () => {
-    test('200', async () => {
-      const res = await authHonoApp.app.request(`${endpoint}${endpoints.jwt.root}`)
-      expect(res.status).toBe(200)
-    })
-    describe('/auth/jwt/sign', () => {
-      test('200', async () => {
-        const res = await authHonoApp.app.request(`${endpoint}${endpoints.jwt.sign}`, {
-          method: 'POST',
-        })
-        expect(res.status).toBe(200)
-      })
-    })
-  })
-}

@@ -1,23 +1,34 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import type { UnstableDevWorker } from 'wrangler'
-import { unstable_dev } from 'wrangler'
 import { authHonoApp } from './route'
 
-describe.skip('Wrangler unstable_dev', () => {
-  let worker: UnstableDevWorker
-
-  beforeAll(async () => {
-    worker = await unstable_dev('src/index.ts', {
-      experimental: { disableExperimentalWarning: true },
-    })
+describe('/auth', () => {
+  test('api', async () => {
+    const res = await authHonoApp.app.request('/auth')
+    expect(await res.text()).toBe('hi gpt')
   })
-  // afterAll(async () => {
-  //   await worker.stop()
-  // })
 
-  test('get /', async () => {
-    const res = await worker.fetch('/')
-    expect(res.status).toBe(200)
-    expect(await res.text()).toBe('Hello Hono!')
+  describe.skip('', () => {
+    describe('/auth Hello Hono!', () => {
+      test('get /', async () => {
+        const res = await authHonoApp.app.request('/auth')
+        expect(res.status).toBe(200)
+        expect(await res.text()).toBe('Hello Hono!')
+      })
+    })
+
+    describe('/auth/jwt', () => {
+      test('200', async () => {
+        const res = await authHonoApp.app.request(`${endpoint}${endpoints.jwt.root}`)
+        expect(res.status).toBe(200)
+      })
+      describe('/auth/jwt/sign', () => {
+        test('200', async () => {
+          const res = await authHonoApp.app.request(`${endpoint}${endpoints.jwt.sign}`, {
+            method: 'POST',
+          })
+          expect(res.status).toBe(200)
+        })
+      })
+    })
   })
 })
