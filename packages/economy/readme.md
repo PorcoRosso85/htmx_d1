@@ -126,3 +126,53 @@ const TRANSACTION = Type.Object({
 }
 
 ```
+
+### エンドポイント設計
+1. ユーザー登録・更新・削除
+1. 取引、利用
+    1.  圏外資産＞圏内資産
+    1.  圏内資産＞圏外資産
+1.  表示
+    1. 残高
+    1. 履歴
+1. 自動設定
+    1. 分配率、配当率
+    1. 
+1. 通知
+1. 外部サービス連携
+1. ポイント
+    1. 有効期限
+    1. ランク
+1. サポート
+
+#### エンドポイント一覧
+```typescript
+const endpoints = {
+    root: '/economy', // 初期ページ表示
+    user: {
+        root: '/economy/user',
+        register: '/economy/user/register', // ユーザー登録
+        update: '/economy/user/update', // ユーザー更新
+        delete: '/economy/user/delete', // ユーザー削除
+    },
+    transaction: {
+        root: '/economy/transaction',
+        in: '/economy/transaction/in', // 圏外資産＞圏内資産
+        out: '/economy/transaction/out', // 圏内資産＞圏外資産
+    },
+    balance: '/economy/balance', // 残高表示
+    history: '/economy/history', // 履歴表示
+    setting: {
+        root: '/economy/setting',
+        auto: '/economy/setting/auto', // 自動設定（分配率、配当率）
+    },
+    notification: '/economy/notification', // 通知
+    external: '/economy/external', // 外部サービス連携
+    point: {
+        root: '/economy/point',
+        expiry: '/economy/point/expiry', // ポイント有効期限
+        rank: '/economy/point/rank', // ポイントランク
+    },
+    support: '/economy/support' // サポート
+}
+```
