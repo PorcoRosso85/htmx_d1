@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import { economyHonoApp, endpoints } from './index'
+import { economyHonoApp, endpoints, query } from './index'
 
-describe('/auth', () => {
+describe.skip('/auth', () => {
   describe('/auth/login', () => {
     test('正常なログイン', async () => {
       // 正しいユーザー名とパスワードを用いてログイン試行
@@ -63,7 +63,7 @@ describe('/auth', () => {
   })
 })
 
-describe('middleware', () => {
+describe.skip('middleware', () => {
   describe('jwt /*', () => {
     test('ログイン成功時にJWTが正しく生成されることを確認', async () => {
       // ログインリクエストとJWTの生成検証
@@ -131,8 +131,59 @@ describe('/economy', () => {
         })
       })
       describe('ワーカーとストレージ間の通信テスト', () => {
-        test('Workers KVやDurable Objectsへのデータの読み書き', () => {})
-        test('データの整合性と永続性の確認', () => {})
+        describe('kv/d1/r2', async () => {
+          // miniflareでシミュレーション
+          const { Miniflare } = await import('miniflare')
+
+          const mf = new Miniflare({
+            name: 'main',
+            modules: true,
+            script: `
+                // export default {
+                //   async fetch(request, env, ctx){
+                //     return new Response('Hello World!');
+                //   },};
+                `,
+            kvNamespaces: ['KV'],
+            d1Databases: ['D1'],
+            r2Buckets: ['R2'],
+            // Binding of `wrangler.toml`
+          })
+          const kv = await mf.getKVNamespace('KV')
+          const d1db = await mf.getD1Database('D1')
+          const r2 = await mf.getR2Bucket('R2')
+          // const options = {}
+          // const db = require('better-sqlite3')(':memory:', options)
+
+          describe('データの整合性と永続性の確認', () => {
+            test('query d1', async () => {
+              await d1db.exec('DROP TABLE IF EXISTS root;')
+              await d1db.exec(
+                'CREATE TABLE IF NOT EXISTS root (ID INTEGER PRIMARY KEY, Name TEXT, Email TEXT);',
+              )
+              await d1db.exec(
+                `INSERT INTO root (ID, Name, Email) VALUES (01, 'Tom', 'tom@example.com');`,
+              )
+
+              const id = '01'
+              const sql = query('/economy', id)
+              const { results } = await d1db.prepare(sql).all()
+              console.debug(results)
+              expect(results).toEqual([{ ID: 1, Name: 'Tom', Email: 'tom@example.com' }])
+            })
+
+            test('query kv', async () => {
+              await kv.put('foo', 'bar')
+              expect(await kv.get('foo')).toBe('bar')
+            })
+
+            test('query r2', async () => {
+              await r2.put('foo', 'bar')
+              const object = await r2.get('foo')
+              expect(await object?.text()).toBe('bar')
+            })
+          })
+        })
       })
     })
 

@@ -27,9 +27,9 @@ const endpoints = {
   },
 }
 
-const query = (endpoint, id) => {
-  switch (endpoint) {
-    case '/':
+const query = (endpoints, id) => {
+  switch (endpoints) {
+    case '/economy':
       return `select * from root where ID = ${id}`
     default:
       throw new Error()
@@ -75,4 +75,4 @@ const economyHonoApp = {
   app: app,
 }
 
-export { economyHonoApp, endpoints }
+export { economyHonoApp, endpoints, query }
