@@ -9,7 +9,7 @@ import { describe, expect, test } from 'vitest'
 
 import * as schema from './schema'
 
-describe('typebox runtime check', () => {})
+describe.skip('typebox runtime check', () => {})
 
 describe('schema', async () => {
   const mf = new Miniflare({
@@ -59,27 +59,35 @@ describe('schema', async () => {
         // TODO: insert文は実行はされるが、incomplete input
         test.skip('insert data => check ddl and `query` function', async () => {
           const sql = `
-          INSERT INTO user_master (
-            userId,
-            userName,
-            passwordHash,
-            emailAddress,
-            affiliation,
-            distributorBranchId,
-            passInitKey,
-            passInitKeyLimit
-          ) VALUES (
-            'user1',
-            'user1',
-            'password1',
-            'user1@example.com',
-            'affiliation1',
-            'distributorBranch1',
-            'passInitKey1',
-            '2023-01-01 00:00:00'
-          );
-        `
+            INSERT INTO user_master (
+              userId,
+              userName,
+              passwordHash,
+              emailAddress,
+              affiliation,
+              distributorBranchId,
+              passInitKey,
+              passInitKeyLimit
+            ) VALUES (
+              'user1',
+              'user1',
+              'password1',
+              'user1@example.com',
+              'affiliation1',
+              'distributorBranch1',
+              'passInitKey1',
+              '2023-01-01 00:00:00'
+            );
+          `
           await d1db.exec(sql)
+          const { results } = await d1db.prepare('SELECT * FROM user_master;').all()
+          expect(results.length).toBe(1)
+          expect(results[0].userId).toBe('user1')
+          expect(results[0].userName).toBe('user1')
+          expect(results[0].passwordHash).toBe('password1')
+        })
+
+        test.skip('validate inseted data', async () => {
           const { results } = await d1db.prepare('SELECT * FROM user_master;').all()
           expect(results.length).toBe(1)
           expect(results[0].userId).toBe('user1')

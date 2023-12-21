@@ -116,81 +116,20 @@ describe.skip('middleware', () => {
 
 describe('/economy', () => {
   describe('/', () => {
-    describe('フェーズ 1: 初期開発テスト', () => {
+    describe('初期開発', () => {
       describe('ブラウザとワーカー間の通信テスト', () => {
-        test('get', async () => {
-          const res = await economyHonoApp.app.request('/economy', { method: 'GET' })
-          expect(res.status).toBe(200)
-        })
-        test('HTTPメソッドのハンドリング', async () => {
-          const res = await economyHonoApp.app.request('/economy', { method: 'POST' })
-          expect(res.status).toBe(404)
-        })
-        test.skip('エラーレスポンス（404、500）のテスト', () => {
-          // 404のエンドポイント、500のエンドポイントを実装済み
-        })
+        browserWorkerTest()
       })
       describe('ワーカーとストレージ間の通信テスト', () => {
-        describe('kv/d1/r2', async () => {
-          // miniflareでシミュレーション
-          const { Miniflare } = await import('miniflare')
-
-          const mf = new Miniflare({
-            name: 'main',
-            modules: true,
-            script: `
-                // export default {
-                //   async fetch(request, env, ctx){
-                //     return new Response('Hello World!');
-                //   },};
-                `,
-            kvNamespaces: ['KV'],
-            d1Databases: ['D1'],
-            r2Buckets: ['R2'],
-            // Binding of `wrangler.toml`
-          })
-          const kv = await mf.getKVNamespace('KV')
-          const d1db = await mf.getD1Database('D1')
-          const r2 = await mf.getR2Bucket('R2')
-          // const options = {}
-          // const db = require('better-sqlite3')(':memory:', options)
-
-          describe('データの整合性と永続性の確認', () => {
-            test('query d1', async () => {
-              await d1db.exec('DROP TABLE IF EXISTS root;')
-              await d1db.exec(
-                'CREATE TABLE IF NOT EXISTS root (ID INTEGER PRIMARY KEY, Name TEXT, Email TEXT);',
-              )
-              await d1db.exec(
-                `INSERT INTO root (ID, Name, Email) VALUES (01, 'Tom', 'tom@example.com');`,
-              )
-
-              const id = '01'
-              const sql = query('/economy', id)
-              const { results } = await d1db.prepare(sql).all()
-              console.debug(results)
-              expect(results).toEqual([{ ID: 1, Name: 'Tom', Email: 'tom@example.com' }])
-            })
-
-            test('query kv', async () => {
-              await kv.put('foo', 'bar')
-              expect(await kv.get('foo')).toBe('bar')
-            })
-
-            test('query r2', async () => {
-              await r2.put('foo', 'bar')
-              const object = await r2.get('foo')
-              expect(await object?.text()).toBe('bar')
-            })
-          })
+        describe('ストレージと通信シミュレーションができる', async () => {
+          await kvd1r2Test()
         })
       })
     })
 
     describe.skip('フェーズ 2: 統合と機能テスト', () => {
       describe('エンドツーエンドのテスト', () => {
-        test('ユーザーアクションからデータストレージまでの流れ', () => {})
-        test('パフォーマンスの測定（レイテンシ、スループット）', () => {})
+        e2eTest()
       })
       describe('APIテスト', () => {
         test('APIの契約テスト', () => {})
@@ -273,3 +212,90 @@ describe('/economy', () => {
     })
   })
 })
+
+const browserWorkerTest = () => {
+  test('get', async () => {
+    const res = await economyHonoApp.app.request('/economy', { method: 'GET' })
+    expect(res.status).toBe(200)
+  })
+  test('HTTPメソッドのハンドリング', async () => {
+    const res = await economyHonoApp.app.request('/economy', { method: 'POST' })
+    expect(res.status).toBe(404)
+  })
+  test.skip('エラーレスポンス（404、500）のテスト', () => {
+    // 404のエンドポイント、500のエンドポイントを実装済み
+  })
+}
+
+const kvd1r2Test = async () => {
+  // miniflareでシミュレーション
+  const { Miniflare } = await import('miniflare')
+
+  const mf = new Miniflare({
+    name: 'main',
+    modules: true,
+    script: `
+                // export default {
+                //   async fetch(request, env, ctx){
+                //     return new Response('Hello World!');
+                //   },};
+                `,
+    kvNamespaces: ['KV'],
+    d1Databases: ['D1'],
+    r2Buckets: ['R2'],
+    // Binding of `wrangler.toml`
+  })
+  const kv = await mf.getKVNamespace('KV')
+  const d1db = await mf.getD1Database('D1')
+  const r2 = await mf.getR2Bucket('R2')
+  // const options = {}
+  // const db = require('better-sqlite3')(':memory:', options)
+
+  describe('データの整合性と永続性の確認', () => {
+    test('query d1', async () => {
+      await d1db.exec('DROP TABLE IF EXISTS root;')
+      await d1db.exec(
+        'CREATE TABLE IF NOT EXISTS root (ID INTEGER PRIMARY KEY, Name TEXT, Email TEXT);',
+      )
+      await d1db.exec(`INSERT INTO root (ID, Name, Email) VALUES (01, 'Tom', 'tom@example.com');`)
+
+      const id = '01'
+      const sql = query('/economy', id)
+      const { results } = await d1db.prepare(sql).all()
+      console.debug(results)
+      expect(results).toEqual([{ ID: 1, Name: 'Tom', Email: 'tom@example.com' }])
+    })
+
+    test('query kv', async () => {
+      await kv.put('foo', 'bar')
+      expect(await kv.get('foo')).toBe('bar')
+    })
+
+    test('query r2', async () => {
+      await r2.put('foo', 'bar')
+      const object = await r2.get('foo')
+      expect(await object?.text()).toBe('bar')
+    })
+  })
+}
+
+const e2eTest = () => {
+  // miniflareでシミュレーション不可能であり、dploy後に実施する
+  test('ユーザーアクションからデータストレージまでの流れ', () => {})
+  test('パフォーマンスの測定（レイテンシ、スループット）', async () => {
+    const start = performance.now()
+
+    // APIリクエストの実行
+    // deloy先にアクセスする
+    // const url = 'https://example.com'
+    // const app = new URL(url)
+    const response = await fetch(app, url)
+    const end = performance.now()
+
+    // レスポンスタイムの計測
+    const responseTime = end - start
+
+    // レスポンスタイムが500ミリ秒未満であることを確認
+    expect(responseTime).toBeLessThan(500)
+  })
+}
