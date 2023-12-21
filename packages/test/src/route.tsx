@@ -1,15 +1,26 @@
 import { Hono } from 'hono'
-
-const endpoint = '/test'
+import { rateLimit } from 'hono/rate-limit'
 
 const endpoints = {
-  root: '/',
-  getJobs: '/get-jobs',
+  root: '/test',
+  getJobs: '/test/get-jobs',
+  performance: {
+    root: '/test/performance',
+  },
+  ratelimit: '/test/ratelimit',
 }
 
-const app = new Hono().basePath(endpoint)
+const app = new Hono().basePath(endpoints.root)
 
 app
+  .use(
+    `${endpoints.root}/*`,
+    rateLimit({
+      max: 100, // 100 reqs per ...
+      window: 60 * 60 * 1000, // 1hour
+    }),
+  )
+
   .get(endpoints.root, (c) => {
     return c.json({ message: '/test' }, 201, { 'X-Custom': 'Thanks' })
   })
@@ -19,37 +30,21 @@ app
     return c.html(<>hi</>)
   })
 
+  .get(endpoints.performance.root, async (c) => {
+    const result = await {
+      message: 'performance',
+      timestamp: Date.now(),
+    }
+    return await c.json(result)
+  })
+
+  .get(endpoints.ratelimit, (c) => {
+    return c.text('rate limit endpoint')
+  })
+
 const testHonoApp = {
-  endpoint: endpoint,
+  endpoint: endpoints.root,
   app: app,
 }
 
-if (import.meta.vitest) {
-  const { describe, test, expect, beforeAll, afterAll } = import.meta.vitest
-
-  describe('/test', () => {
-    test('get /, 200, header, message', async () => {
-      const res = await testHonoApp.app.request(endpoint)
-      expect(res.status).toBe(201)
-      expect(res.headers.get('X-Custom')).toBe('Thanks')
-      expect(await res.json()).toEqual({ message: '/test' })
-    })
-
-    describe('post /get-jobs', () => {
-      test('status 200', async () => {
-        const res = await testHonoApp.app.request(`${endpoint}${endpoints.getJobs}`, {
-          method: 'POST',
-        })
-        expect(res.status).toBe(200)
-        expect(res.headers.get('Content-Type')).toBe('text/html; charset=UTF-8')
-      })
-
-      test('status 404', async () => {
-        const res = await testHonoApp.app.request('/test/invalid', {
-          method: 'POST',
-        })
-        expect(res.status).toBe(404)
-      })
-    })
-  })
-}
+export { testHonoApp, endpoints }

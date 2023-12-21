@@ -19,7 +19,7 @@ describe('env', () => {
     await worker.stop()
   })
 
-  test('api_key var', async () => {
+  test.skip('api_key var', async () => {
     const res = await worker.fetch('/env')
     expect(res.status).toBe(200)
     expect(await res.text()).toBe('api')

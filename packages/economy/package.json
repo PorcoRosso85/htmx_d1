@@ -1,0 +1,19 @@
+{
+  "name": "@quantic/d1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@quantic/config": "workspace:^",
+    "@sinclair/typebox": "^0.31.28"
+  },
+  "devDependencies": {
+    "miniflare": "^3.20231030.4"
+  }
+}
