@@ -1,105 +1,128 @@
+### 勘定科目テーブル:
+科目ID
+科目名
+科目タイプ（資産、負債、収益、費用など）
+
+### 仕訳テーブル:
+
+仕訳ID
+勘定科目ID（勘定科目テーブルとの関連）
+金額
+借方/貸方
+取引日
+仕分け理由（期末調整など）
+
+### 主体テーブル:
+
+主体ID
+主体名
+主体タイプ
+その他情報
+
+### 取引主体関連テーブル:
+
+取引ID
+発生主体ID
+対象主体ID
+
 ```mermaid
 erDiagram
-    USER ||--o{ TRANSACTION : "has"
-    USER ||--o{ POINT : "owns"
-    USER ||--o{ NOTIFICATION : "receives"
-    TRANSACTION ||--o{ TRANSACTION_HISTORY : "has"
-    POINT ||--o{ POINT_ALLOCATION : "has"
+    ACCOUNT ||--o{ JOURNAL : "has"
+    ENTITY ||--o{ TRANSACTION : "has"
+    TRANSACTION ||--o{ JOURNAL : "involves"
 
-    USER {
-        string userId PK
-        string userName
-        string passwordHash
-        string emailAddress
-        string affiliation
+    ACCOUNT {
+        string accountId PK
+        string accountName
+        string accountType
+    }
+
+    JOURNAL {
+        string journalId PK
+        string accountId FK
+        float amount
+        string debitCredit
+        date transactionDate
+        string reason
+    }
+
+    ENTITY {
+        string entityId PK
+        string entityName
+        string entityType
+        string otherInfo
     }
 
     TRANSACTION {
         string transactionId PK
-        string senderUserId FK
-        string receiverUserId FK
-        float amount
-        datetime transactionDate
+        string originatingEntityId FK
+        string targetEntityId FK
     }
 
-    TRANSACTION_HISTORY {
-        string transactionId FK
-        string userId FK
-        datetime transactionDate
-        float amount
-        string transactionType
-    }
+```
 
-    POINT {
-        string userId FK
-        float totalPoints
-    }
 
-    POINT_ALLOCATION {
-        string userId FK
-        float allocationRatio
-    }
+### ポイントを送る
+```sql
+INSERT INTO 仕訳テーブル (勘定科目ID, 金額, 借方/貸方, 取引日, 仕分け理由)
+VALUES
+(/* 主体Aのポイント勘定科目ID */, /* 送るポイント量 */, '貸方', CURRENT_DATE, 'ポイント送付'),
+(/* 主体Bのポイント勘定科目ID */, /* 受けるポイント量 */, '借方', CURRENT_DATE, 'ポイント受領');
 
-    NOTIFICATION {
-        string notificationId PK
-        string userId FK
-        string message
-        boolean isRead
-        datetime notificationDate
-    }
+INSERT INTO 取引主体関連テーブル (取引ID, 発生主体ID, 対象主体ID)
+VALUES
+(/* 新しい取引ID */, /* 主体AのID */, /* 主体BのID */);
+
+```
+#### トリガーを使用し、主体間取引が自動的に各主体仕訳を更新する
+```sql
+CREATE TRIGGER TransferPointsTrigger
+AFTER INSERT ON 取引主体関連テーブル
+FOR EACH ROW
+BEGIN
+   -- 主体Aのポイント減少を記録
+   INSERT INTO 仕訳テーブル (勘定科目ID, 金額, 借方/貸方, 取引日, 仕分け理由)
+   VALUES ((SELECT 科目ID FROM 勘定科目テーブル WHERE 科目名 = 'ポイント' AND 主体ID = NEW.発生主体ID),
+           NEW.金額, '貸方', NEW.取引日, 'ポイント送付');
+
+   -- 主体Bのポイント増加を記録
+   INSERT INTO 仕訳テーブル (勘定科目ID, 金額, 借方/貸方, 取引日, 仕分け理由)
+   VALUES ((SELECT 科目ID FROM 勘定科目テーブル WHERE 科目名 = 'ポイント' AND 主体ID = NEW.対象主体ID),
+           NEW.金額, '借方', NEW.取引日, 'ポイント受領');
+END;
 
 ```
 
 ```typescript
 
 const T = {
-  // 販売会社マスタ (distributor_master)
-  distributorBranchId: Type.String({ minLength: 1, maxLength: 20 }),
-  distributorId: Type.String({ minLength: 1, maxLength: 3 }),
-  branchId: Type.String({ minLength: 1, maxLength: 3 }),
-  distributorName: Type.String({ minLength: 1, maxLength: 16 }),
-  branchName: Type.String({ minLength: 1, maxLength: 16 }),
+const ACCOUNT = Type.Object({
+    accountId: Type.String({ minLength: 1, maxLength: 50 }),
+    accountName: Type.String({ minLength: 1, maxLength: 100 }),
+    accountType: Type.String({ minLength: 1, maxLength: 50 }),
+})
 
-  // ロールマスタ (role_master)
-  roleId: Type.Number(),
-  categoryId: Type.Number(),
-  roleType: Type.Number(),
-  selectFlag: Type.Boolean(),
-  roleName: Type.String({ minLength: 1, maxLength: 40 }),
+const JOURNAL = Type.Object({
+    journalId: Type.String({ minLength: 1, maxLength: 50 }),
+    accountId: Type.String({ minLength: 1, maxLength: 50 }),
+    amount: Type.Number(),
+    debitCredit: Type.String({ minLength: 1, maxLength: 10 }),
+    transactionDate: Type.String({ format: 'date-time' }),
+    reason: Type.String({ minLength: 1, maxLength: 200 }),
+})
 
-  // 機種マスタ (model_master)
-  model: Type.Number(),
-  deviceName: Type.String({ minLength: 1, maxLength: 26 }),
-  modelType: Type.String({ minLength: 1, maxLength: 26 }),
-  modelId: Type.String({ minLength: 1, maxLength: 3 }),
+const ENTITY = Type.Object({
+    entityId: Type.String({ minLength: 1, maxLength: 50 }),
+    entityName: Type.String({ minLength: 1, maxLength: 100 }),
+    entityType: Type.String({ minLength: 1, maxLength: 50 }),
+    otherInfo: Type.Optional(Type.String({ minLength: 1, maxLength: 200 })),
+})
 
-  // エラーマスタ (error_master)
-  errorCode: Type.String({ minLength: 1, maxLength: 6 }),
-  errorGroupId: Type.Number(),
-  errorGroup: Type.String({ minLength: 1, maxLength: 16 }),
-  errorName: Type.String({ minLength: 1, maxLength: 50 }),
-
-  // ユーザーマスタ (user_master)
-  userId: Type.String({ minLength: 1, maxLength: 20 }),
-  userName: Type.String({ minLength: 1, maxLength: 60 }),
-  passwordHash: Type.String({ minLength: 1, maxLength: 255 }),
-  emailAddress: Type.String({ minLength: 1, maxLength: 254 }),
-  affiliation: Type.String({ minLength: 1, maxLength: 60 }),
-  // distributorBranchId: Type.Optional(Type.String({ minLength: 1, maxLength: 20 })),
-  passInitKey: Type.Optional(Type.String({ minLength: 1, maxLength: 64 })),
-  passInitKeyLimit: Type.Optional(Type.String()), // timestamp with time zone
-
-  // 顧客マスタ (customer_master)
-  customerUserId: Type.String({ minLength: 1, maxLength: 20 }),
-  salesUserId: Type.String({ minLength: 1, maxLength: 20 }),
-
-  // 装置マスタ (machine_master)
-  serialNumber: Type.String({ minLength: 1, maxLength: 9 }),
-  // customerUserId: Type.String({ minLength: 1, maxLength: 20 }),
-  destination: Type.String({ minLength: 1, maxLength: 150 }),
-  // distributorBranchId: Type.String({ minLength: 1, maxLength: 20 }),
-  serviceUserId: Type.String({ minLength: 1, maxLength: 20 }),
-  startDate: Type.String(), // date
+const TRANSACTION = Type.Object({
+    transactionId: Type.String({ minLength: 1, maxLength: 50 }),
+    originatingEntityId: Type.String({ minLength: 1, maxLength: 50 }),
+    targetEntityId: Type.String({ minLength: 1, maxLength: 50 }),
+})
 }
 
 ```

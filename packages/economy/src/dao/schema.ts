@@ -11,67 +11,64 @@ import { Static, Type } from '@sinclair/typebox'
  *
  */
 const T = {
-  // 販売会社マスタ (distributor_master)
-  distributorBranchId: Type.String({ minLength: 1, maxLength: 20 }),
-  distributorId: Type.String({ minLength: 1, maxLength: 3 }),
-  branchId: Type.String({ minLength: 1, maxLength: 3 }),
-  distributorName: Type.String({ minLength: 1, maxLength: 16 }),
-  branchName: Type.String({ minLength: 1, maxLength: 16 }),
+  accountId: Type.String({ minLength: 1, maxLength: 50 }),
+  accountName: Type.String({ minLength: 1, maxLength: 100 }),
+  accountType: Type.String({ minLength: 1, maxLength: 50 }),
 
-  // ロールマスタ (role_master)
-  roleId: Type.Number(),
-  categoryId: Type.Number(),
-  roleType: Type.Number(),
-  selectFlag: Type.Boolean(),
-  roleName: Type.String({ minLength: 1, maxLength: 40 }),
+  journalId: Type.String({ minLength: 1, maxLength: 50 }),
+  // accountId: Type.String({ minLength: 1, maxLength: 50 }),
+  amount: Type.Number(),
+  debitCredit: Type.String({ minLength: 1, maxLength: 10 }),
+  transactionDate: Type.String({ format: 'date-time' }),
+  reason: Type.String({ minLength: 1, maxLength: 200 }),
 
-  // 機種マスタ (model_master)
-  model: Type.Number(),
-  deviceName: Type.String({ minLength: 1, maxLength: 26 }),
-  modelType: Type.String({ minLength: 1, maxLength: 26 }),
-  modelId: Type.String({ minLength: 1, maxLength: 3 }),
+  userId: Type.String({ minLength: 1, maxLength: 50 }),
+  userName: Type.String({ minLength: 1, maxLength: 100 }),
+  userType: Type.String({ minLength: 1, maxLength: 50 }),
+  otherInfo: Type.Optional(Type.String({ minLength: 1, maxLength: 200 })),
 
-  // エラーマスタ (error_master)
-  errorCode: Type.String({ minLength: 1, maxLength: 6 }),
-  errorGroupId: Type.Number(),
-  errorGroup: Type.String({ minLength: 1, maxLength: 16 }),
-  errorName: Type.String({ minLength: 1, maxLength: 50 }),
-
-  // ユーザーマスタ (user_master)
-  userId: Type.String({ minLength: 1, maxLength: 20 }),
-  userName: Type.String({ minLength: 1, maxLength: 60 }),
-  passwordHash: Type.String({ minLength: 1, maxLength: 255 }),
-  emailAddress: Type.String({ minLength: 1, maxLength: 254 }),
-  affiliation: Type.String({ minLength: 1, maxLength: 60 }),
-  // distributorBranchId: Type.Optional(Type.String({ minLength: 1, maxLength: 20 })),
-  passInitKey: Type.Optional(Type.String({ minLength: 1, maxLength: 64 })),
-  passInitKeyLimit: Type.Optional(Type.String()), // timestamp with time zone
-
-  // 顧客マスタ (customer_master)
-  customerUserId: Type.String({ minLength: 1, maxLength: 20 }),
-  salesUserId: Type.String({ minLength: 1, maxLength: 20 }),
-
-  // 装置マスタ (machine_master)
-  serialNumber: Type.String({ minLength: 1, maxLength: 9 }),
-  // customerUserId: Type.String({ minLength: 1, maxLength: 20 }),
-  destination: Type.String({ minLength: 1, maxLength: 150 }),
-  // distributorBranchId: Type.String({ minLength: 1, maxLength: 20 }),
-  serviceUserId: Type.String({ minLength: 1, maxLength: 20 }),
-  startDate: Type.String(), // date
+  transactionId: Type.String({ minLength: 1, maxLength: 50 }),
+  originatingEntityId: Type.String({ minLength: 1, maxLength: 50 }),
+  targetEntityId: Type.String({ minLength: 1, maxLength: 50 }),
 }
 
-// refactor userMasterTable
-const userMasterTable = {
-  tableName: 'user_master',
+const accountTable = {
+  tableName: 'account',
+  typeObject: Type.Object({
+    accountId: T.accountId,
+    accountName: T.accountName,
+    accountType: T.accountType,
+  }),
+}
+
+const journalTable = {
+  tableName: 'journal',
+  typeObject: Type.Object({
+    journalId: T.journalId,
+    accountId: T.accountId,
+    amount: T.amount,
+    debitCredit: T.debitCredit,
+    transactionDate: T.transactionDate,
+    reason: T.reason,
+  }),
+}
+
+const userTable = {
+  tableName: 'user',
   typeObject: Type.Object({
     userId: T.userId,
     userName: T.userName,
-    passwordHash: T.passwordHash,
-    emailAddress: T.emailAddress,
-    affiliation: T.affiliation,
-    distributorBranchId: T.distributorBranchId,
-    passInitKey: T.passInitKey,
-    passInitKeyLimit: T.passInitKeyLimit,
+    userType: T.userType,
+    otherInfo: T.otherInfo,
+  }),
+}
+
+const transactionTable = {
+  tableName: 'transaction',
+  typeObject: Type.Object({
+    transactionId: T.transactionId,
+    originatingEntityId: T.originatingEntityId,
+    targetEntityId: T.targetEntityId,
   }),
 }
 
@@ -82,4 +79,4 @@ const generateDDL = (tableName: string, table: { typeObject: Static<typeof Type.
   return sql
 }
 
-export { T, userMasterTable, generateDDL }
+export { T, accountTable, journalTable, userTable, transactionTable, generateDDL }

@@ -29,70 +29,51 @@ describe('schema', async () => {
   const d1db = await mf.getD1Database('D1')
 
   describe('d1', () => {
-    describe('user_master ddl', async () => {
-      const sql = schema.generateDDL(schema.userMasterTable.tableName, schema.userMasterTable)
+    describe('user ddl', async () => {
+      const sql = schema.generateDDL(schema.userTable.tableName, schema.userTable)
       await d1db.exec(sql)
       const { results } = await d1db.prepare('SELECT * FROM sqlite_master;').all()
 
       test('show table', () => {
         const tableNames = results.map((result) => result.name)
-        expect(tableNames).toContain('user_master')
+        expect(tableNames).toContain('user')
       })
 
-      test.skip('show columns', async () => {
-        const { results } = await d1db.prepare('PRAGMA table_info(user_master);').all()
-        const columnNames = results.map((result) => result.name)
-        // TODO: 余計なものまで帰ってきてしまうので、テストを書き直す
-        expect(columnNames).toEqual([
-          'userId',
-          'userName',
-          'passwordHash',
-          'emailAddress',
-          'affiliation',
-          'distributorBranchId',
-          'passInitKey',
-          'passInitKeyLimit',
-        ])
+      test('show columns', async () => {
+        const { results } = await d1db
+          .prepare(`PRAGMA table_info(${schema.userTable.tableName});`)
+          .all()
+        const columnNames = Object.keys(schema.userTable.typeObject.properties)
+        expect(columnNames).toEqual(['userId', 'userName', 'userType', 'otherInfo'])
       })
 
-      describe('user_master dml', () => {
-        // TODO: insert文は実行はされるが、incomplete input
-        test.skip('insert data => check ddl and `query` function', async () => {
-          const sql = `
-            INSERT INTO user_master (
-              userId,
-              userName,
-              passwordHash,
-              emailAddress,
-              affiliation,
-              distributorBranchId,
-              passInitKey,
-              passInitKeyLimit
-            ) VALUES (
-              'user1',
-              'user1',
-              'password1',
-              'user1@example.com',
-              'affiliation1',
-              'distributorBranch1',
-              'passInitKey1',
-              '2023-01-01 00:00:00'
-            );
-          `
-          await d1db.exec(sql)
-          const { results } = await d1db.prepare('SELECT * FROM user_master;').all()
-          expect(results.length).toBe(1)
-          expect(results[0].userId).toBe('user1')
-          expect(results[0].userName).toBe('user1')
-          expect(results[0].passwordHash).toBe('password1')
+      describe('user dml', () => {
+        test('show columns', async () => {
+          const { results } = await d1db
+            .prepare(`PRAGMA table_info(${schema.userTable.tableName});`)
+            .all()
+          const columnNames = Object.keys(schema.userTable.typeObject.properties)
+          expect(columnNames).toEqual(['userId', 'userName', 'userType', 'otherInfo'])
         })
 
-        test.skip('validate inseted data', async () => {
-          const { results } = await d1db.prepare('SELECT * FROM user_master;').all()
+        test('insert and validate', async () => {
+          const columnNames = Object.keys(schema.userTable.typeObject.properties)
+          console.debug('columnNames', columnNames)
+          if (!columnNames.includes('userId')) {
+            throw new Error('userId is not defined')
+          }
+
+          const sql = `
+            INSERT INTO user (userId, userName, userType, otherInfo)
+            VALUES ('user1', 'User One', 'type1', 'other info');
+          `
+          await d1db.prepare(sql).run()
+          const { results } = await d1db.prepare('SELECT * FROM user;').all()
           expect(results.length).toBe(1)
           expect(results[0].userId).toBe('user1')
-          expect(results[0].userName).toBe('user1')
-          expect(results[0].passwordHash).toBe('password1')
+          expect(results[0].userName).toBe('User One')
+          expect(results[0].userType).toBe('type1')
+          expect(results[0].otherInfo).toBe('other info')
         })
       })
     })
