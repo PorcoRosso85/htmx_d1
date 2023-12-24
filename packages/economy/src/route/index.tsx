@@ -2,38 +2,33 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 
-/**
- * ユーザーの取得先へリクエスト
- * リクエスト結果をストア
- * ストアをアルゴリズムへ
- * アルゴリズム算出結果
- * ポイント移行
- * 手動ポイント移行
- *
- */
-
 const endpoints = {
-  root: '/economy',
-  select: '/economy/select',
-  update: {
-    root: '/economy/update',
-    // asset: '/economy/update/asset',
+  root: '/economy', // 初期ページ表示
+  user: {
+    root: '/economy/user',
+    register: '/economy/user/register', // ユーザー登録
+    update: '/economy/user/update', // ユーザー更新
+    delete: '/economy/user/delete', // ユーザー削除
   },
-  calc: '/economy/calc',
-  migrate: {
-    root: '/economy/migrate',
-    auto: '/economy/migrate/auto',
-    manual: '/economy/migrate/manual',
+  transaction: {
+    root: '/economy/transaction',
+    in: '/economy/transaction/in', // 圏外資産＞圏内資産
+    out: '/economy/transaction/out', // 圏内資産＞圏外資産
   },
-}
-
-const query = (endpoints, id) => {
-  switch (endpoints) {
-    case '/economy':
-      return `select * from root where ID = ${id}`
-    default:
-      throw new Error()
-  }
+  balance: '/economy/balance', // 残高表示
+  history: '/economy/history', // 履歴表示
+  setting: {
+    root: '/economy/setting',
+    auto: '/economy/setting/auto', // 自動設定（分配率、配当率）
+  },
+  notification: '/economy/notification', // 通知
+  external: '/economy/external', // 外部サービス連携
+  point: {
+    root: '/economy/point',
+    expiry: '/economy/point/expiry', // ポイント有効期限
+    rank: '/economy/point/rank', // ポイントランク
+  },
+  support: '/economy/support', // サポート
 }
 
 const app = new Hono()
@@ -49,25 +44,37 @@ app
     // if not authed
   )
 
+  /**
+  1. root
+      - ポイントエコノミーシステムの初期ページを表示するためのHTMLとTailwindCSS, ハイドレーションするJavascriptを作成します。
+      1. get
+      1. 要素一覧
+          - ボタン
+              - ユーザー
+              - 各エンドポイントボタン
+          - hx-targetとなるターゲット要素
+      1. スクリプト機能一覧
+          - HTMXヘッダリスナー
+          - Service Worker
+  * 
+  */
   .get(endpoints.root, async (c) => {
-    // user main
-    return c.text('')
-  })
-
-  .get(endpoints.select, async (c) => {
-    // select, from database to user
-  })
-
-  .get(endpoints.update.root, (c) => {
-    // update, from api to database
-  })
-
-  .get(endpoints.migrate.auto, (c) => {
-    // migrate auto, with other hook
-  })
-
-  .get(endpoints.migrate.manual, (c) => {
-    // migrate manually, from user to user
+    return c.html(
+      <div hx-target="next div">
+        // ユーザー
+        <button type="button" hx-get={endpoints.user.root} />
+        // 各エンドポイントボタン // 世代数問わず再帰的にボタンを作成する
+        {Object.keys(endpoints).map((key) => {
+          if (typeof endpoints[key] === 'string') {
+            return <button type="button" hx-get={endpoints[key]} />
+          }
+          return Object.keys(endpoints[key]).map((key2) => {
+            return <button type="button" hx-get={endpoints[key][key2]} />
+          })
+        })}
+        <div />
+      </div>,
+    )
   })
 
 const economyHonoApp = {
@@ -76,3 +83,12 @@ const economyHonoApp = {
 }
 
 export { economyHonoApp, endpoints, query }
+
+const query = (endpoints, id) => {
+  switch (endpoints) {
+    case '/economy':
+      return `select * from root where ID = ${id}`
+    default:
+      throw new Error()
+  }
+}

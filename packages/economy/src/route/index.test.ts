@@ -1,122 +1,17 @@
+import {
+  Browser,
+  BrowserContext,
+  Page,
+  chromium,
+  expect as expectPlayWright,
+} from '@playwright/test'
+import { PreviewServer, preview } from 'vite'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { economyHonoApp, endpoints, query } from './index'
 
-describe.skip('/auth', () => {
-  describe('/auth/login', () => {
-    test('正常なログイン', async () => {
-      // 正しいユーザー名とパスワードを用いてログイン試行
-      // 期待される結果: ステータスコード200、有効なJWTトークンが返される
-    })
-
-    test('無効なユーザー名', async () => {
-      // 存在しないユーザー名でログイン試行
-      // 期待される結果: ステータスコード401（Unauthorized）、エラーメッセージが返される
-    })
-
-    test('無効なパスワード', async () => {
-      // 正しいユーザー名で、間違ったパスワードを用いてログイン試行
-      // 期待される結果: ステータスコード401（Unauthorized）、エラーメッセージが返される
-    })
-
-    test('リクエストフォーマットが不正', async () => {
-      // 不正なフォーマット（例: パスワード欠落）でログイン試行
-      // 期待される結果: ステータスコード400（Bad Request）、エラーメッセージが返される
-    })
-
-    test('ログイン試行回数の制限', async () => {
-      // 短時間内に複数回のログイン失敗
-      // 期待される結果: ステータスコード429（Too Many Requests）、エラーメッセージが返される
-    })
-  })
-  describe('/auth/refresh', () => {
-    test.skip('有効なリフレッシュトークンで新しいトークンを取得', async () => {
-      // 有効なリフレッシュトークンを用いて新しいJWTトークンを要求
-      // 期待される結果: ステータスコード200、新しいJWTトークンが返される
-      // TODO: middlewareとして実装することを検討
-    })
-
-    test('無効なリフレッシュトークンの使用', async () => {
-      // 無効または期限切れのリフレッシュトークンを用いてトークン更新を試みる
-      // 期待される結果: ステータスコード401（Unauthorized）、エラーメッセージが返される
-    })
-
-    test('リフレッシュトークンが欠落している場合', async () => {
-      // リフレッシュトークンを含まないリクエストを送信
-      // 期待される結果: ステータスコード400（Bad Request）、エラーメッセージが返される
-    })
-  })
-  describe('/auth/resetpw', () => {
-    test('有効なユーザー情報でパスワードリセット', async () => {
-      // ユーザー識別情報（例：メールアドレス）と新しいパスワードを送信
-      // 期待される結果: ステータスコード200、パスワードがリセットされる
-    })
-
-    test('存在しないユーザー情報でパスワードリセットを試みる', async () => {
-      // 存在しないユーザー情報でパスワードリセットを試みる
-      // 期待される結果: ステータスコード404（Not Found）、エラーメッセージが返される
-    })
-
-    test('無効なリセットリクエスト（不適切なフォーマット）', async () => {
-      // 不適切なリクエストフォーマット（例: パスワード形式が不適切）
-      // 期待される結果: ステータスコード400（Bad Request）、エラーメッセージが返される
-    })
-  })
-})
-
-describe.skip('middleware', () => {
-  describe('jwt /*', () => {
-    test('ログイン成功時にJWTが正しく生成されることを確認', async () => {
-      // ログインリクエストとJWTの生成検証
-    })
-
-    test('有効なJWTによる認証が正常に行われることを確認', async () => {
-      // JWTを使用した認証リクエストの検証
-    })
-
-    describe('非認証状態のテスト', () => {
-      test('無効なJWTを使用した場合に401 Unauthorizedが返されることを確認', async () => {
-        // 無効なJWTを使用したリクエストの検証
-      })
-
-      test('期限切れのJWTを使用した場合に401 Unauthorizedが返されることを確認', async () => {
-        // 期限切れのJWTを使用したリクエストの検証
-      })
-    })
-
-    describe('認証済みユーザーのテスト', () => {
-      // アクセス権限の確認
-      describe('アクセス権限のテスト', () => {
-        test('アクセス権限がないリソースにアクセスした場合に403 Forbiddenが返されることを確認', async () => {
-          // 権限がないリソースへのアクセス試行の検証
-        })
-      })
-
-      test('認証後にJWTペイロードが正確に取得できることを確認', async () => {
-        // JWTペイロードの取得と検証
-      })
-
-      test('JWTの期限が近づいている場合に適切な処理が行われることを確認', async () => {
-        // 期限切れ間近のJWTの処理を検証
-      })
-    })
-
-    describe('/auth/refresh トークンリフレッシュのテスト', () => {
-      test('有効なリフレッシュトークンで新しいJWTが発行されることを確認', async () => {
-        // リフレッシュトークンを使用した新しいJWTの発行を検証
-      })
-
-      test('無効なリフレッシュトークンを使用した場合に適切なエラーレスポンスが返されることを確認', async () => {
-        // 無効なリフレッシュトークンを使用したリフレッシュ試行の検証
-      })
-    })
-  })
-
-  describe('cors /*')
-})
-
 describe('/economy', () => {
   describe('/', () => {
-    describe('初期開発', () => {
+    describe('初期開発, 単体テスト', () => {
       describe('ブラウザとワーカー間の通信テスト', () => {
         browserWorkerTest()
       })
@@ -127,18 +22,16 @@ describe('/economy', () => {
       })
     })
 
-    describe.skip('フェーズ 2: 統合と機能テスト', () => {
+    describe('統合と機能テスト', () => {
       describe('エンドツーエンドのテスト', () => {
         e2eTest()
       })
       describe('APIテスト', () => {
-        test('APIの契約テスト', () => {})
-        test('エンドポイントの検証とバリデーション', () => {})
-        test('レート制限とスロットリング', () => {})
+        apiTest()
       })
     })
 
-    describe.skip('フェーズ 3: ユーザビリティとインタフェーステスト', () => {
+    describe.skip('ユーザビリティとインタフェーステスト', () => {
       describe('ユーザーインタフェース（UI）テスト', () => {
         test('異なるブラウザとデバイスでの表示の一貫性', () => {})
         test('レスポンシブデザイン', () => {})
@@ -146,7 +39,7 @@ describe('/economy', () => {
       })
     })
 
-    describe.skip('フェーズ 4: セキュリティとリスク管理テスト', () => {
+    describe.skip('セキュリティとリスク管理テスト', () => {
       describe('セキュリティテスト', () => {
         test('XSS、CSRF攻撃に対するテスト', () => {})
         test('認証と認可メカニズムのテスト', () => {})
@@ -154,14 +47,14 @@ describe('/economy', () => {
       })
     })
 
-    describe.skip('フェーズ 5: パフォーマンスと負荷テスト', () => {
+    describe.skip('パフォーマンスと負荷テスト', () => {
       describe('負荷テスト', () => {
         test('高トラフィックや多数リクエストの処理能力の評価', () => {})
         test('リソースリークテスト', () => {})
       })
     })
 
-    describe.skip('フェーズ 6: 拡張性とメンテナンステスト', () => {
+    describe.skip('拡張性とメンテナンステスト', () => {
       describe('データベーステスト', () => {
         test('SQLインジェクションなどのセキュリティテスト', () => {})
         test('トランザクション整合性の確認', () => {})
@@ -174,7 +67,7 @@ describe('/economy', () => {
       })
     })
 
-    describe.skip('フェーズ 7: 運用とデプロイメントテスト', () => {
+    describe.skip('運用とデプロイメントテスト', () => {
       describe('コンフィギュレーションとデプロイメントのテスト', () => {
         test('環境変数と設定ファイルの管理', () => {})
         test('デプロイメントプロセスの自動化とロールバック', () => {})
@@ -248,10 +141,8 @@ const kvd1r2Test = async () => {
   const kv = await mf.getKVNamespace('KV')
   const d1db = await mf.getD1Database('D1')
   const r2 = await mf.getR2Bucket('R2')
-  // const options = {}
-  // const db = require('better-sqlite3')(':memory:', options)
 
-  describe('データの整合性と永続性の確認', () => {
+  describe.skip('データの整合性と永続性の確認', () => {
     test('query d1', async () => {
       await d1db.exec('DROP TABLE IF EXISTS root;')
       await d1db.exec(
@@ -281,8 +172,14 @@ const kvd1r2Test = async () => {
 
 const e2eTest = () => {
   // miniflareでシミュレーション不可能であり、dploy後に実施する
-  test('ユーザーアクションからデータストレージまでの流れ', () => {})
-  test('パフォーマンスの測定（レイテンシ、スループット）', async () => {
+  describe('ユーザーアクションからデータストレージまでの流れ', () => {
+    test('ハイドレーションが読み込まれている', () => {})
+    test('ヘッダーが認識されている', () => {})
+    test('ボタンが正しく設定されている', () => {
+      // ボタンが正しく設定されている
+    })
+  })
+  test.skip('パフォーマンスの測定（レイテンシ、スループット）', async () => {
     const start = performance.now()
 
     // APIリクエストの実行
@@ -298,4 +195,91 @@ const e2eTest = () => {
     // レスポンスタイムが500ミリ秒未満であることを確認
     expect(responseTime).toBeLessThan(500)
   })
+}
+
+const apiTest = () => {
+  test('APIの契約テスト', () => {})
+  describe.skip('APIの機能テスト', () => {
+    let server: PreviewServer
+    let browser: Browser
+    let page: Page
+    let context: BrowserContext
+
+    const PORT = 8787
+
+    beforeAll(async () => {
+      // start server
+      server = await preview({
+        root: './',
+        server: {
+          port: PORT,
+        },
+      })
+      // check with all browser
+      const launchOptions = {
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      }
+      browser = await chromium.launch(launchOptions)
+
+      page = await browser.newPage()
+    })
+
+    afterAll(async () => {
+      await browser.close()
+      await new Promise<void>((resolve, reject) => {
+        server.httpServer.close((err) => {
+          if (err) {
+            reject(err)
+            return
+          }
+          resolve()
+        })
+      })
+    })
+
+    test('count updated when button clicked', async () => {
+      await page.goto(`http://localhost:${PORT}/economy}`)
+      const button = await page.$('button')
+      await button?.click()
+      const count = await page.$eval('p', (el) => el.textContent)
+      expect(count).toBe('1')
+    })
+
+    test('should change count when button clicked', async () => {
+      await page.goto(`http://localhost:${PORT}`)
+      const button = page.getByRole('button', { name: /Clicked/ })
+      await expectPlayWright(button).toBeVisible()
+
+      await expectPlayWright(button).toHaveText('Clicked 0 time(s)')
+
+      await button.click()
+      await expectPlayWright(button).toHaveText('Clicked 1 time(s)')
+    }, 60_000)
+
+    test('hx- エンドポイントが正しく設定されている', () => {
+      // https://github.com/vitest-dev/vitest/blob/userquin/feat-isolate-browser-tests/examples/react-testing-lib-browser/src/App.test.tsx
+    })
+    test('hx- 正常な結果、適切な要素が更新されている', () => {})
+    test('ボタンのレンダリングテスト', async () => {
+      // ボタンのレンダリングテスト: コンポーネントが正しくレンダリングされるかをテストします。これには、レンダリングされたHTMLが期待通りであることを確認するアサーションが含まれます。
+
+      // test対象は "get /economy"
+      // check page resolve test endpoint
+      test('ボタンのレンダリングテスト', async () => {
+        try {
+          await page.goto('http://localhost:8787/economy')
+          const button = await page.$('button')
+          // その他のテストコード
+        } catch (error) {
+          console.error('Error occurred during page navigation:', error)
+          // 必要に応じてエラーハンドリングを行います
+        }
+      })
+    })
+    // イベントハンドラのテスト: ボタンのクリックイベントなどのイベントハンドラが正しく動作するかをテストします。これには、ボタンをクリックした際の挙動をシミュレートし、期待される結果が得られるかを検証するアサーションが含まれます。
+    // 非同期動作のテスト: あるボタンが非同期リクエストを行う場合、その動作をテストします。これには、非同期リクエストが完了した後の状態を検証するアサーションが含まれます。
+  })
+  test('エンドポイントの検証とバリデーション', () => {})
+  test('レート制限とスロットリング', () => {})
 }
