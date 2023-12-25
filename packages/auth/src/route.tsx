@@ -3,41 +3,43 @@ import { Context, Hono, Next } from 'hono'
 import { cors } from 'hono/cors'
 import { jwt } from 'hono/jwt'
 import { logger } from 'hono/logger'
-
-const endpoint = '/auth'
+import { genJwt } from './middleware/jwt'
 
 const endpoints = {
-  root: '/',
+  root: '/auth',
+  login: {
+    root: '/auth/login',
+    basic: '/auth/login/basic',
+    oauth: '/auth/login/oauth',
+  },
   jwt: {
-    root: '/jwt',
-    sign: '/jwt/sign',
-    verify: '/jwt/verify',
-    decode: '/jwt/decode',
+    root: '/auth/jwt',
+    sign: '/auth/jwt/sign',
+    verify: '/auth/jwt/verify',
+    decode: '/auth/jwt/decode',
   },
-  basic: '/basic',
-  oauth: '/oauth',
+  basic: '/auth/basic',
+  oauth: '/auth/oauth',
   otp: {
-    root: '/otp',
-    send: '/otp/send',
+    root: '/auth/otp',
+    send: '/auth/otp/send',
   },
-  success: '/success',
+  success: '/auth/success',
 }
 
-const app = new Hono<{ Bindings: Bindings }>().basePath(endpoint)
+const app = new Hono<{ Bindings: Bindings }>()
 
 app
   .use(logger())
 
   .use(cors())
 
-  .use('/*', async (c: Context<{ Bindings: Bindings }>, next: Next) =>
-    jwt({ secret: c.env.SECRET_KEY })(c, next),
-  )
+  // .use('/*', async (c: Context<{ Bindings: Bindings }>, next: Next) =>
+  //   jwt({ secret: c.env.SECRET_KEY })(c, next),
+  // )
 
   .get(endpoints.root, async (c) => {
-    // route to 'jwt' or 'auth0/oauth'
-    const api = c.env.OPENAI_API_KEY
-    return c.text(api)
+    return c.text('Hello Hono!')
   })
 
   // .post(endpoints.otp.root, (c) => {
@@ -66,8 +68,25 @@ app
   //   })
   // })
 
-  .get(endpoints.jwt.root, (c) => {
+  .get(`${endpoints.jwt.root}/:userId`, (c) => {
+    // payloadの取得
+    const userId = c.req.param('userId')
+    const { result } = c.env.D1DB.prepare(`SELECT * FROM users where userId = ${userId}`).all()
+    const payload = {
+      userId: result.userId,
+      name: result.name,
+      email: result.email,
+    }
+
+    const secret = c.env.SECRET_KEY
+    // jwtの生成
+    // ここでjwtを生成して、それを返す
+    // トークンの生成
+
+    const token = genJwt(payload, secret)
+
     c.status(200)
+    c.json({ token })
     return c.text('/auth/jwt')
   })
 
@@ -101,7 +120,7 @@ app
   })
 
 const authHonoApp = {
-  endpoint: endpoint,
+  endpoint: endpoints.root,
   app: app,
 }
 
