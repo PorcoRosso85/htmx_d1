@@ -7,11 +7,12 @@
   "author": "",
   "license": "MIT",
   "scripts": {
-    "dev": "wrangler dev --live-reload src/index.ts",
+    "dev": "wrangler dev --live-reload --log-level debug src/index.ts",
     "deploy": "wrangler deploy --minify src/index.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.1.9",
+    "@quantic/config": "workspace:^",
     "@quantic/durable-objects": "workspace:^",
     "@quantic/insentive": "workspace:^",
     "@quantic/join": "workspace:^",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.4.1",
     "@cloudflare/workers-types": "^4.20231002.0",
+    "miniflare": "^3.20231030.4",
     "vite": "^5.0.9",
     "vite-node": "^1.0.1",
     "vitest": "^1.0.4",
