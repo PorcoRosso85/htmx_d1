@@ -1,5 +1,9 @@
+import * as crypto from 'crypto'
+import { tbValidator } from '@hono/typebox-validator'
+import { Bindings } from '@quantic/config'
 import { type Static } from '@sinclair/typebox'
 import { Context } from 'hono'
+import { Hono } from 'hono'
 import * as schema from '../dao/schema'
 
 export const endpoints = {
@@ -12,7 +16,7 @@ export const endpoints = {
   root: {
     endpoint: '/economy',
     middleware: [],
-    handler: async (c: Context) => {
+    handler: (app: Hono<{ Bindings: Bindings }>) => async (c: Context) => {
       return c.html(
         <div hx-target="next div">
           <button type="button" hx-get={endpoints.user.root} />
@@ -47,14 +51,63 @@ export const endpoints = {
     /**
      * @alias /economy/user/register
      * ユーザー登録
-     * formデータを受け取るためのUIを提供し、
-     * formデータを受け取り、データベースに登録します。
      */
     register: {
       endpoint: '/economy/user/register', // ユーザー登録
-      handler: async (c: Context) => {},
-      query: (params: Static<typeof schema.userTableTypeBox.columns>) => {
-        return `INSERT INTO user (user_id, user_name, user_role) VALUES ('${params.user_id}', '${params.user_name}', '${params.user_role}');`
+      /**
+       * @param c
+       * - email
+       * - user_id
+       * - user_name
+       * - user_role
+       */
+      middleware: {
+        validation: tbValidator('form', schema.userTableTypeBox.columns, (result, c) => {
+          // FIXME: not working
+          if (!result.success) {
+            return c.text('Invalid!', 400)
+          }
+        }),
+      },
+      /**
+       * formデータを受け取るためのUIを提供し、
+       * formデータを受け取り、
+       * データベースに登録します。
+       *
+       * @returns
+       * - status code 200
+       * - status code 500
+       * - html
+       */
+      handler: (app: Hono<{ Bindings: Bindings }>) => async (c: Context) => {
+        const { email, user_name, user_role } = await c.req.parseBody()
+        const user_id = new crypto.randomUUID().toString()
+        const query = endpoints.user.register.query.insert_user({
+          email,
+          user_id,
+          user_name,
+          user_role,
+        })
+        await c.env.D1DB.prepare(query)
+
+        // check inserted or not
+        const query2 = "select * from user where user_id = 'user_id'"
+        const result = await c.env.D1DB.prepare(query2)
+        if (result === null) {
+          // return status code 500
+          // TODO: check this or 'onError' in hono
+          c.status(500)
+          c.header('X-Status-Reason', 'User not inserted')
+          c.header('X-Message', 'User not inserted')
+          return c.html(<div>user not inserted</div>)
+        }
+        // TODO: Add a return statement for the successful case
+      },
+      query: {
+        // TODO: not nullのキーが欠けているとき静的型検査でエラーを出してほしい
+        insert_user: (params: Static<typeof schema.userTableTypeBox.columns>) => {
+          return `INSERT INTO user (user_id, user_name, user_role, email) VALUES ('${params.user_id}', '${params.user_name}', '${params.user_role}', ${params.email});`
+        },
       },
     },
 

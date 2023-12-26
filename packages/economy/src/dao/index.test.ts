@@ -1,6 +1,4 @@
 import path from 'path'
-import { drizzle } from 'drizzle-orm/d1'
-import { migrate } from 'drizzle-orm/d1/migrator'
 import { Miniflare } from 'miniflare'
 import { describe, expect, test } from 'vitest'
 import * as schema from './schema'
@@ -21,15 +19,8 @@ describe('D1', async () => {
   // env.Binding
   const d1db = await mf.getD1Database('D1')
 
-  // drizzle client
-  const drizzleClient = drizzle(d1db, { schema: { ...schema } })
-
   test('gen d1 instance', async () => {
     expect(d1db).toBeDefined()
-  })
-
-  test('gen drizzle d1 client', async () => {
-    expect(drizzleClient).toBeDefined()
   })
 
   describe.skip('real d1 instance without miniflare', async () => {})
@@ -98,4 +89,5 @@ describe('D1', async () => {
       const object = await r2.get('foo')
       expect(await object?.text()).toBe('bar')
     })
+  })
 })

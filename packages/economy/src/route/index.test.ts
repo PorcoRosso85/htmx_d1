@@ -1,18 +1,15 @@
-import {
-  Browser,
-  BrowserContext,
-  Page,
-  chromium,
-  expect as expectPlayWright,
-} from '@playwright/test'
 import { PreviewServer, preview } from 'vite'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { economyHonoApp, endpoints } from './index'
 
 describe('統合/機能テスト', () => {
   describe('ブラウザとワーカー間の通信テスト', () => {
-    // TODO: エンドポイントループ処理
     browserWorkerTest(endpoints.root.endpoint)
+    browserWorkerTest(endpoints.user.register.endpoint, 'POST', {
+      email: 'email',
+      user_name: 'userName',
+      user_role: 'userRole',
+    })
   })
   describe('エンドツーエンドのテスト', () => {
     e2eTest()
@@ -95,12 +92,46 @@ describe.skip('フェーズ 6: 拡張性とメンテナンステスト', () => {
   })
 })
 
-const browserWorkerTest = (endpoint: string) => {
+const browserWorkerTest = (endpoint: string, method = 'GET', body: { [key: string]: any } = {}) => {
   console.debug('endpoint', endpoint)
-  describe('200, then...', () => {
-    test('get, then 200', async () => {
-      const res = await economyHonoApp.app.request(endpoint, { method: 'GET' })
-      expect(res.status).toBe(200)
+  describe('200,', () => {
+    test('then 200', async () => {
+      let res
+      switch (method) {
+        case 'GET':
+          res = await economyHonoApp.app.request(endpoint)
+          expect(res.status).toBe(200)
+          break
+        case 'POST':
+          const formData = new FormData()
+          for (const key in body) {
+            formData.append(key, body[key])
+          }
+          res = await economyHonoApp.app.request(endpoint, {
+            method: method,
+            //
+            // https://github.com/honojs/hono/issues/1840#issuecomment-1866906026
+            body: formData,
+          })
+          expect(res.status).toBe(200)
+          break
+        case 'PUT':
+          res = await economyHonoApp.app.request(endpoint, {
+            method: method,
+            body: JSON.stringify(body),
+          })
+          expect(res.status).toBe(200)
+          break
+        case 'DELETE':
+          res = await economyHonoApp.app.request(endpoint, {
+            method: method,
+            body: JSON.stringify(body),
+          })
+          expect(res.status).toBe(200)
+          break
+        default:
+          break
+      }
     })
   })
 

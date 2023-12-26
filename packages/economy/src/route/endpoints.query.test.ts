@@ -38,10 +38,21 @@ describe('queries', async () => {
 
   describe('after ddl', async () => {
     describe('user.register', () => {
+      test('user.register column has been created', async () => {
+        const { results } = await d1db.prepare('PRAGMA table_info(user);').all()
+        const columnNames = results.map((result) => result.name)
+        console.debug('columnNames', columnNames)
+        expect(columnNames).toContain('email')
+        expect(columnNames).toContain('user_id')
+        expect(columnNames).toContain('user_name')
+        expect(columnNames).toContain('user_role')
+      })
+
       test('user.register', async () => {
         await d1db
           .prepare(
-            endpoints.user.register.query({
+            endpoints.user.register.query.insert_user({
+              email: 'email',
               user_id: 'user_id',
               user_name: 'user_name',
               user_role: 'user_role',
@@ -51,6 +62,7 @@ describe('queries', async () => {
         const { results } = await d1db.prepare('SELECT * FROM user;').all()
         console.debug('results', results)
         expect(results.length).toEqual(1)
+        expect(results[0].email).toEqual('email')
         expect(results[0].user_id).toEqual('user_id')
         expect(results[0].user_name).toEqual('user_name')
         expect(results[0].user_role).toEqual('user_role')

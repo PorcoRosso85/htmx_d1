@@ -1,4 +1,7 @@
+import * as crypto from 'crypto'
+import { tbValidator } from '@hono/typebox-validator'
 import { Bindings, config } from '@quantic/config'
+import { type Static } from '@sinclair/typebox'
 /**
  * motivation: ポイントエコノミーシステムのルーティングを作成する
  */
@@ -6,6 +9,7 @@ import { Context, Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { queries } from '../dao'
+import * as schema from '../dao/schema'
 import { endpoints } from './endpoints'
 
 /**
@@ -31,17 +35,11 @@ app
 
   .get(endpoints.root.endpoint, endpoints.root.handler)
 
-  .post(endpoints.user.register.endpoint, async (c) => {
-    /**
-     * @see /economy/user/register
-     */
-    // TODO: untested
-    const { name, email } = c.req.parseBody()
-
-    // register user
-    const query = queries['user.register']
-    const d1db = await c.env.D1DB.prepare(query)
-  })
+  .post(
+    endpoints.user.register.endpoint,
+    // handler which can access to app's generics
+    async (c) => await endpoints.user.register.handler(c),
+  )
 
 const economyHonoApp = {
   endpoint: endpoints.root,

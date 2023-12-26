@@ -28,7 +28,8 @@ const T = {
    */
   entityId: Type.String({ minLength: 1, maxLength: 50 }),
 
-  userId: Type.String({ minLength: 1, maxLength: 50 }),
+  userId: Type.Optional(Type.String({ minLength: 1, maxLength: 50 })),
+  email: Type.String({ minLength: 1, maxLength: 50, format: 'email' }),
   userName: Type.String({ minLength: 1, maxLength: 100 }),
   userRole: Type.String({ minLength: 1, maxLength: 50 }),
   otherInfo: Type.Optional(Type.String({ minLength: 1, maxLength: 200 })),
@@ -49,6 +50,7 @@ const userTableTypeBox = {
     user_id: T.userId,
     user_name: T.userName,
     user_role: T.userRole,
+    email: T.email,
     other_info: T.otherInfo,
   }),
 }
@@ -100,4 +102,4 @@ const genDdl = (typebox: any) => {
   return ddl
 }
 
-export { accountTable, accountTableTypeBox, genDdl, userTableTypeBox }
+export { accountTableTypeBox, genDdl, userTableTypeBox }
