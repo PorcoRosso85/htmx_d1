@@ -5,7 +5,7 @@ import { Miniflare } from 'miniflare'
 import { describe, expect, test } from 'vitest'
 import * as schema from './schema'
 
-describe('gen d1 instance', async () => {
+describe('D1', async () => {
   const mf = new Miniflare({
     name: 'main',
     modules: true,
@@ -71,65 +71,31 @@ describe('gen d1 instance', async () => {
 
   //   describe('typebox runtime check', () => {})
   // })
-})
+  //
 
-describe('queries', async () => {
-  const { queries } = schema
+  describe.skip('データの整合性と永続性の確認', () => {
+    test('query d1', async () => {
+      await d1db.exec('DROP TABLE IF EXISTS root;')
+      await d1db.exec(
+        'CREATE TABLE IF NOT EXISTS root (ID INTEGER PRIMARY KEY, Name TEXT, Email TEXT);',
+      )
+      await d1db.exec(`INSERT INTO root (ID, Name, Email) VALUES (01, 'Tom', 'tom@example.com');`)
 
-  const mf = new Miniflare({
-    name: 'main',
-    modules: true,
-    script: `
-                    export default {
-                    async fetch(request, env, ctx){
-                        return new Response('Hello World!');
-                    },};
-                    `,
-    d1Databases: ['D1'],
-  })
-
-  const d1db = await mf.getD1Database('D1')
-
-  // create table 'user'
-  // for (const s of ddl.split('\n\n')) {
-  //   // trim new line
-  //   await d1db.exec(s.replaceAll('\n', ''))
-  // }
-
-  // test user table is created
-  // 
-
-  describe('test ddl', async () => {
-    const ddl = schema.genDdl(schema.userTableTypeBox)
-    test('ddl', async () => {
-      console.debug(ddl)
-      expect(ddl).toContain('CREATE TABLE user')
-      expect(ddl).toContain('user_id TEXT')
-      expect(ddl).toContain('user_name TEXT')
-      expect(ddl).toContain('user_role TEXT')
+      const id = '01'
+      const sql = query('/economy', id)
+      const { results } = await d1db.prepare(sql).all()
+      console.debug(results)
+      expect(results).toEqual([{ ID: 1, Name: 'Tom', Email: 'tom@example.com' }])
     })
-    
-    console.debug('ddl', ddl)
-    await d1db.exec(ddl)
 
-    test('assert table', async () => {
-      const { results } = await d1db.prepare('SELECT * FROM sqlite_master;').all()
-      const tableNames = results.map((result) => result.name)
-      console.debug('tableNames', tableNames)
-      expect(tableNames).toContain('user')
+    test('query kv', async () => {
+      await kv.put('foo', 'bar')
+      expect(await kv.get('foo')).toBe('bar')
     })
-  })
 
-  describe('user.register', () => {
-    test('user.register', async () => {
-      await d1db.prepare(queries['user.register'].query({
-        user_id: '1',
-        user_name: 'user1',
-        user_role: 'role1',
-      })).all()
-      const { results } = await d1db.prepare('SELECT * FROM user;').all()
-      console.debug('results', results)
-      expect(results.length).toEqual(1)
+    test('query r2', async () => {
+      await r2.put('foo', 'bar')
+      const object = await r2.get('foo')
+      expect(await object?.text()).toBe('bar')
     })
-  })
 })

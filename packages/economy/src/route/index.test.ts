@@ -7,166 +7,110 @@ import {
 } from '@playwright/test'
 import { PreviewServer, preview } from 'vite'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import { economyHonoApp, endpoints, query } from './index'
+import { economyHonoApp, endpoints } from './index'
 
-describe('/economy', () => {
-  describe('/', () => {
-    describe('初期開発, 単体テスト', () => {
-      describe('ブラウザとワーカー間の通信テスト', () => {
-        browserWorkerTest()
-      })
-      describe('ワーカーとストレージ間の通信テスト', () => {
-        describe('ストレージと通信シミュレーションができる', async () => {
-          await kvd1r2Test()
-        })
-      })
-    })
-
-    describe('統合と機能テスト', () => {
-      describe('エンドツーエンドのテスト', () => {
-        e2eTest()
-      })
-      describe('APIテスト', () => {
-        apiTest()
-      })
-    })
-
-    describe.skip('ユーザビリティとインタフェーステスト', () => {
-      describe('ユーザーインタフェース（UI）テスト', () => {
-        test('異なるブラウザとデバイスでの表示の一貫性', () => {})
-        test('レスポンシブデザイン', () => {})
-        test('データバックアップと復元のテスト', () => {})
-      })
-    })
-
-    describe.skip('セキュリティとリスク管理テスト', () => {
-      describe('セキュリティテスト', () => {
-        test('XSS、CSRF攻撃に対するテスト', () => {})
-        test('認証と認可メカニズムのテスト', () => {})
-        test('SSL/TLSによる通信のセキュリティ確認', () => {})
-      })
-    })
-
-    describe.skip('パフォーマンスと負荷テスト', () => {
-      describe('負荷テスト', () => {
-        test('高トラフィックや多数リクエストの処理能力の評価', () => {})
-        test('リソースリークテスト', () => {})
-      })
-    })
-
-    describe.skip('拡張性とメンテナンステスト', () => {
-      describe('データベーステスト', () => {
-        test('SQLインジェクションなどのセキュリティテスト', () => {})
-        test('トランザクション整合性の確認', () => {})
-        test('スキーマ変更とマイグレーション', () => {})
-      })
-      describe('サービス間連携のテスト', () => {
-        test('外部サービスとの連携（決済システム等）', () => {})
-        test('メッセージキューの統合', () => {})
-        test('タイムアウトとリトライメカニズム', () => {})
-      })
-    })
-
-    describe.skip('運用とデプロイメントテスト', () => {
-      describe('コンフィギュレーションとデプロイメントのテスト', () => {
-        test('環境変数と設定ファイルの管理', () => {})
-        test('デプロイメントプロセスの自動化とロールバック', () => {})
-      })
-    })
-    // 追加テスト項目
-    describe.skip('フェーズ 3: ユーザビリティとインタフェーステスト', () => {
-      describe('互換性テスト、国際化と地域化テスト', () => {
-        // ここにテストケースを記述
-      })
-    })
-
-    describe.skip('フェーズ 4: セキュリティとリスク管理テスト', () => {
-      describe('セキュリティ脆弱性テスト', () => {
-        // ここにテストケースを記述
-      })
-      describe('カスタムヘッダーと認証テスト', () => {
-        // ここにテストケースを記述
-      })
-      describe('フェールセーフとエラー処理のテスト', () => {
-        // ここにテストケースを記述
-      })
-    })
-
-    describe.skip('フェーズ 6: 拡張性とメンテナンステスト', () => {
-      describe('ドキュメントとコントラクトの一貫性テスト', () => {
-        // ここにテストケースを記述
-      })
-      describe('バージョン管理テスト', () => {
-        // ここにテストケースを記述
-      })
-      describe('API依存性テスト', () => {
-        // ここにテストケースを記述
-      })
-    })
+describe('統合/機能テスト', () => {
+  describe('ブラウザとワーカー間の通信テスト', () => {
+    // TODO: エンドポイントループ処理
+    browserWorkerTest(endpoints.root.endpoint)
+  })
+  describe('エンドツーエンドのテスト', () => {
+    e2eTest()
+  })
+  describe('APIテスト', () => {
+    apiTest()
   })
 })
 
-const browserWorkerTest = () => {
-  test('get', async () => {
-    const res = await economyHonoApp.app.request('/economy', { method: 'GET' })
-    expect(res.status).toBe(200)
+describe.skip('ユーザビリティとインタフェーステスト', () => {
+  describe('ユーザーインタフェース（UI）テスト', () => {
+    test('異なるブラウザとデバイスでの表示の一貫性', () => {})
+    test('レスポンシブデザイン', () => {})
+    test('データバックアップと復元のテスト', () => {})
   })
-  test('HTTPメソッドのハンドリング', async () => {
-    const res = await economyHonoApp.app.request('/economy', { method: 'POST' })
+})
+
+describe.skip('セキュリティとリスク管理テスト', () => {
+  describe('セキュリティテスト', () => {
+    test('XSS、CSRF攻撃に対するテスト', () => {})
+    test('認証と認可メカニズムのテスト', () => {})
+    test('SSL/TLSによる通信のセキュリティ確認', () => {})
+  })
+})
+
+describe.skip('パフォーマンスと負荷テスト', () => {
+  describe('負荷テスト', () => {
+    test('高トラフィックや多数リクエストの処理能力の評価', () => {})
+    test('リソースリークテスト', () => {})
+  })
+})
+
+describe.skip('拡張性とメンテナンステスト', () => {
+  describe('データベーステスト', () => {
+    test('SQLインジェクションなどのセキュリティテスト', () => {})
+    test('トランザクション整合性の確認', () => {})
+    test('スキーマ変更とマイグレーション', () => {})
+  })
+  describe('サービス間連携のテスト', () => {
+    test('外部サービスとの連携（決済システム等）', () => {})
+    test('メッセージキューの統合', () => {})
+    test('タイムアウトとリトライメカニズム', () => {})
+  })
+})
+
+describe.skip('運用とデプロイメントテスト', () => {
+  describe('コンフィギュレーションとデプロイメントのテスト', () => {
+    test('環境変数と設定ファイルの管理', () => {})
+    test('デプロイメントプロセスの自動化とロールバック', () => {})
+  })
+})
+// 追加テスト項目
+describe.skip('フェーズ 3: ユーザビリティとインタフェーステスト', () => {
+  describe('互換性テスト、国際化と地域化テスト', () => {
+    // ここにテストケースを記述
+  })
+})
+
+describe.skip('フェーズ 4: セキュリティとリスク管理テスト', () => {
+  describe('セキュリティ脆弱性テスト', () => {
+    // ここにテストケースを記述
+  })
+  describe('カスタムヘッダーと認証テスト', () => {
+    // ここにテストケースを記述
+  })
+  describe('フェールセーフとエラー処理のテスト', () => {
+    // ここにテストケースを記述
+  })
+})
+
+describe.skip('フェーズ 6: 拡張性とメンテナンステスト', () => {
+  describe('ドキュメントとコントラクトの一貫性テスト', () => {
+    // ここにテストケースを記述
+  })
+  describe('バージョン管理テスト', () => {
+    // ここにテストケースを記述
+  })
+  describe('API依存性テスト', () => {
+    // ここにテストケースを記述
+  })
+})
+
+const browserWorkerTest = (endpoint: string) => {
+  console.debug('endpoint', endpoint)
+  describe('200, then...', () => {
+    test('get, then 200', async () => {
+      const res = await economyHonoApp.app.request(endpoint, { method: 'GET' })
+      expect(res.status).toBe(200)
+    })
+  })
+
+  test('invalid method, post method to get endpoint', async () => {
+    const res = await economyHonoApp.app.request(endpoint, { method: 'POST' })
     expect(res.status).toBe(404)
   })
+
   test.skip('エラーレスポンス（404、500）のテスト', () => {
     // 404のエンドポイント、500のエンドポイントを実装済み
-  })
-}
-
-const kvd1r2Test = async () => {
-  // miniflareでシミュレーション
-  const { Miniflare } = await import('miniflare')
-
-  const mf = new Miniflare({
-    name: 'main',
-    modules: true,
-    script: `
-                // export default {
-                //   async fetch(request, env, ctx){
-                //     return new Response('Hello World!');
-                //   },};
-                `,
-    kvNamespaces: ['KV'],
-    d1Databases: ['D1'],
-    r2Buckets: ['R2'],
-    // Binding of `wrangler.toml`
-  })
-  const kv = await mf.getKVNamespace('KV')
-  const d1db = await mf.getD1Database('D1')
-  const r2 = await mf.getR2Bucket('R2')
-
-  describe.skip('データの整合性と永続性の確認', () => {
-    test('query d1', async () => {
-      await d1db.exec('DROP TABLE IF EXISTS root;')
-      await d1db.exec(
-        'CREATE TABLE IF NOT EXISTS root (ID INTEGER PRIMARY KEY, Name TEXT, Email TEXT);',
-      )
-      await d1db.exec(`INSERT INTO root (ID, Name, Email) VALUES (01, 'Tom', 'tom@example.com');`)
-
-      const id = '01'
-      const sql = query('/economy', id)
-      const { results } = await d1db.prepare(sql).all()
-      console.debug(results)
-      expect(results).toEqual([{ ID: 1, Name: 'Tom', Email: 'tom@example.com' }])
-    })
-
-    test('query kv', async () => {
-      await kv.put('foo', 'bar')
-      expect(await kv.get('foo')).toBe('bar')
-    })
-
-    test('query r2', async () => {
-      await r2.put('foo', 'bar')
-      const object = await r2.get('foo')
-      expect(await object?.text()).toBe('bar')
-    })
   })
 }
 

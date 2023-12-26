@@ -2,7 +2,7 @@ import { Bindings, config } from '@quantic/config'
 /**
  * motivation: ポイントエコノミーシステムのルーティングを作成する
  */
-import { Hono } from 'hono'
+import { Context, Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { queries } from '../dao'
@@ -29,30 +29,9 @@ app
     // if not authed
   )
 
-  .get(endpoints.root, async (c) => {
-    /**
-     * @see /economy
-     */
-    return c.html(
-      <div hx-target="next div">
-        // ユーザー
-        <button type="button" hx-get={endpoints.user.root} />
-        // 各エンドポイントボタン // 世代数問わず再帰的にボタンを作成する
-        {Object.keys(endpoints).map((key) => {
-          if (typeof endpoints[key] === 'string') {
-            return <button type="button" hx-get={endpoints[key]} />
-          }
-          return Object.keys(endpoints[key]).map((key2) => {
-            return <button type="button" hx-get={endpoints[key][key2]} />
-          })
-        })}
-        <div />
-        <script>console.log('hello world')</script>
-      </div>,
-    )
-  })
+  .get(endpoints.root.endpoint, endpoints.root.handler)
 
-  .post(endpoints.user.register, async (c) => {
+  .post(endpoints.user.register.endpoint, async (c) => {
     /**
      * @see /economy/user/register
      */
@@ -69,22 +48,4 @@ const economyHonoApp = {
   app: app,
 }
 
-export { economyHonoApp, endpoints, query }
-
-const query = (endpoints, id) => {
-  switch (endpoints) {
-    case '/economy':
-      return `select * from root where ID = ${id}`
-    default:
-      throw new Error()
-  }
-}
-
-/**
- * @import.meta.vitest
- * ```ts
- * assert(add(1, 2) === 3)
- * expect(add(1, 2)).toBe(3)
- * ```
- */
-export const add = (a: number, b: number) => a + b
+export { economyHonoApp, endpoints }

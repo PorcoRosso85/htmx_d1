@@ -4,8 +4,6 @@
  *
  */
 import { type Static, Type } from '@sinclair/typebox'
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
 
 /**
  * T containes the schema of the table, and all of column name
@@ -36,21 +34,14 @@ const T = {
   otherInfo: Type.Optional(Type.String({ minLength: 1, maxLength: 200 })),
 }
 
-/**
- * drizzle schema
- * snake_case
- */
-const accountTable = sqliteTable('account', {
-  accountId: text('account_id').notNull().primaryKey(),
-  accountName: text('account_name').notNull(),
-  accountType: text('account_type').notNull(),
-})
-
-const accountTableTypeBox = createInsertSchema(accountTable, {
-  accountId: T.accountId,
-  accountName: T.accountName,
-  accountType: T.accountType,
-})
+const accountTableTypeBox = {
+  tableName: 'account',
+  columns: Type.Object({
+    account_id: T.accountId,
+    account_name: T.accountName,
+    account_type: T.accountType,
+  }),
+}
 
 const userTableTypeBox = {
   tableName: 'user',
@@ -109,27 +100,4 @@ const genDdl = (typebox: any) => {
   return ddl
 }
 
-/**
- * queries for d1
- * refer to endpoints in ../routes.ts
- *
- */
-const queries = {
-  root: {
-    topView: {
-      query: `select * from account`,
-    },
-  },
-
-  /**
-   * @see /economy/user/register
-   *
-   */
-  'user.register': {
-    query: (params: Static<typeof userTableTypeBox.columns>) => {
-      return `INSERT INTO user (user_id, user_name, user_role) VALUES ('${params.user_id}', '${params.user_name}', '${params.user_role}');`
-    },
-  },
-}
-
-export { accountTable, accountTableTypeBox, genDdl, userTableTypeBox, queries }
+export { accountTable, accountTableTypeBox, genDdl, userTableTypeBox }

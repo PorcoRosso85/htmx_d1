@@ -1,3 +1,7 @@
+import { type Static } from '@sinclair/typebox'
+import { Context } from 'hono'
+import * as schema from '../dao/schema'
+
 export const endpoints = {
   /**
    * @alias /economy
@@ -5,14 +9,40 @@ export const endpoints = {
    * javascriptのスクリプトは、scriptタグの中に記載します。
    *
    */
-  root: '/economy',
+  root: {
+    endpoint: '/economy',
+    middleware: [],
+    handler: async (c: Context) => {
+      return c.html(
+        <div hx-target="next div">
+          <button type="button" hx-get={endpoints.user.root} />
+          {/* {Object.keys(endpoints).map((key) => {
+            if (typeof endpoints[key] === 'string') {
+              return <button type="button" hx-get={endpoints[key]} />
+            }
+            return Object.keys(endpoints[key]).map((key2) => {
+              return <button type="button" hx-get={endpoints[key][key2]} />
+            })
+          })} */}
+          <div />
+          <script>console.log('hello world')</script>
+        </div>,
+      )
+    },
+    query: (id: string) => {
+      return `select * from root where ID = ${id}`
+    },
+  },
 
   user: {
     /**
      * @alias /economy/user
      * ユーザー情報
      */
-    root: '/economy/user',
+    root: {
+      endpoint: '/economy/user',
+      handler: async () => {},
+    },
 
     /**
      * @alias /economy/user/register
@@ -20,7 +50,13 @@ export const endpoints = {
      * formデータを受け取るためのUIを提供し、
      * formデータを受け取り、データベースに登録します。
      */
-    register: '/economy/user/register', // ユーザー登録
+    register: {
+      endpoint: '/economy/user/register', // ユーザー登録
+      handler: async (c: Context) => {},
+      query: (params: Static<typeof schema.userTableTypeBox.columns>) => {
+        return `INSERT INTO user (user_id, user_name, user_role) VALUES ('${params.user_id}', '${params.user_name}', '${params.user_role}');`
+      },
+    },
 
     /**
      * @alias /economy/user/update
