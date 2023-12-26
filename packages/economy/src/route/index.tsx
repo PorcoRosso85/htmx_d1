@@ -1,37 +1,22 @@
+import { Bindings, config } from '@quantic/config'
+/**
+ * motivation: ポイントエコノミーシステムのルーティングを作成する
+ */
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { queries } from '../dao'
+import { endpoints } from './endpoints'
 
-const endpoints = {
-  root: '/economy', // 初期ページ表示
-  user: {
-    root: '/economy/user',
-    register: '/economy/user/register', // ユーザー登録
-    update: '/economy/user/update', // ユーザー更新
-    delete: '/economy/user/delete', // ユーザー削除
-  },
-  transaction: {
-    root: '/economy/transaction',
-    in: '/economy/transaction/in', // 圏外資産＞圏内資産
-    out: '/economy/transaction/out', // 圏内資産＞圏外資産
-  },
-  balance: '/economy/balance', // 残高表示
-  history: '/economy/history', // 履歴表示
-  setting: {
-    root: '/economy/setting',
-    auto: '/economy/setting/auto', // 自動設定（分配率、配当率）
-  },
-  notification: '/economy/notification', // 通知
-  external: '/economy/external', // 外部サービス連携
-  point: {
-    root: '/economy/point',
-    expiry: '/economy/point/expiry', // ポイント有効期限
-    rank: '/economy/point/rank', // ポイントランク
-  },
-  support: '/economy/support', // サポート
-}
+/**
+ * endpointsは以下のような構造になっています。
+ * すべてのエンドポイントを含んでいます。すなわち、これ以外のエンドポイントは存在しません。
+ * 言い換えると、すべての機能一覧がここに記載されており、設計の全容が把握できます。
+ * このような設計にすることで、開発者はどのような機能があるかを把握でき、
+ * また、開発者はどのような機能がないかを把握できます。
+ */
 
-const app = new Hono()
+const app = new Hono<{ Bindings: Bindings }>()
 
 app
   .use(logger())
@@ -44,21 +29,10 @@ app
     // if not authed
   )
 
-  /**
-  1. root
-      - ポイントエコノミーシステムの初期ページを表示するためのHTMLとTailwindCSS, ハイドレーションするJavascriptを作成します。
-      1. get
-      1. 要素一覧
-          - ボタン
-              - ユーザー
-              - 各エンドポイントボタン
-          - hx-targetとなるターゲット要素
-      1. スクリプト機能一覧
-          - HTMXヘッダリスナー
-          - Service Worker
-  * 
-  */
   .get(endpoints.root, async (c) => {
+    /**
+     * @see /economy
+     */
     return c.html(
       <div hx-target="next div">
         // ユーザー
@@ -73,8 +47,21 @@ app
           })
         })}
         <div />
+        <script>console.log('hello world')</script>
       </div>,
     )
+  })
+
+  .post(endpoints.user.register, async (c) => {
+    /**
+     * @see /economy/user/register
+     */
+    // TODO: untested
+    const { name, email } = c.req.parseBody()
+
+    // register user
+    const query = queries['user.register']
+    const d1db = await c.env.D1DB.prepare(query)
   })
 
 const economyHonoApp = {

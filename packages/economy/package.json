@@ -14,14 +14,11 @@
   "dependencies": {
     "@libsql/client": "0.4.0-pre.5",
     "@quantic/config": "workspace:^",
-    "@sinclair/typebox": "^0.31.28",
-    "drizzle-orm": "^0.29.1",
-    "drizzle-typebox": "^0.1.1"
+    "@sinclair/typebox": "^0.31.28"
   },
   "devDependencies": {
     "@miniflare/d1": "^2.14.1",
     "@miniflare/shared": "^2.14.1",
-    "drizzle-kit": "^0.20.7",
     "miniflare": "^3.20231030.4"
   }
 }

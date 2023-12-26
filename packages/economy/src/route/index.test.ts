@@ -283,3 +283,31 @@ const apiTest = () => {
   test('エンドポイントの検証とバリデーション', () => {})
   test('レート制限とスロットリング', () => {})
 }
+
+describe('/economy/user', () => {
+  describe.skip('/economy/user/register', () => {
+    test('parseBody is working', async () => {
+      const req = new Request('/economy/user/register', {
+        method: 'POST',
+        // formの場合は, body: new URLSearchParams({
+        body: new URLSearchParams({
+          name: 'test',
+          email: 'test@mail.com',
+        }).toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      })
+
+      const parsedBody = await req.body()
+      expect(parsedBody.name).toBe('test')
+      expect(parsedBody.email).toBe('test@mail.com')
+    })
+  })
+  describe('/economy/user/update', () => {
+    test('ユーザー更新', () => {})
+  })
+  describe('/economy/user/delete', () => {
+    test('ユーザー削除', () => {})
+  })
+})

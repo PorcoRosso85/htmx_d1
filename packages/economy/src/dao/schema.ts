@@ -3,7 +3,7 @@
  * define the schema of the table.
  *
  */
-import { Static, Type } from '@sinclair/typebox'
+import { type Static, Type } from '@sinclair/typebox'
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-typebox'
 
@@ -17,21 +17,23 @@ const T = {
   accountName: Type.String({ minLength: 1, maxLength: 100 }),
   accountType: Type.String({ minLength: 1, maxLength: 50 }),
 
-  journalId: Type.String({ minLength: 1, maxLength: 50 }),
+  transactionId: Type.String({ minLength: 1, maxLength: 50 }),
   // accountId: Type.String({ minLength: 1, maxLength: 50 }),
-  amount: Type.Number(),
+  amount: Type.Number({ minimum: 0, maximum: 1000000000 }),
   debitCredit: Type.String({ minLength: 1, maxLength: 10 }),
   transactionDate: Type.String({ format: 'date-time' }),
   reason: Type.String({ minLength: 1, maxLength: 200 }),
 
+  /**
+   * 送信元entityId, 送信先entityId
+   * 同じtxIdで、送信元のamountの減少と、送信先のamountの増加を表現する。
+   */
+  entityId: Type.String({ minLength: 1, maxLength: 50 }),
+
   userId: Type.String({ minLength: 1, maxLength: 50 }),
   userName: Type.String({ minLength: 1, maxLength: 100 }),
-  userType: Type.String({ minLength: 1, maxLength: 50 }),
+  userRole: Type.String({ minLength: 1, maxLength: 50 }),
   otherInfo: Type.Optional(Type.String({ minLength: 1, maxLength: 200 })),
-
-  transactionId: Type.String({ minLength: 1, maxLength: 50 }),
-  originatingEntityId: Type.String({ minLength: 1, maxLength: 50 }),
-  targetEntityId: Type.String({ minLength: 1, maxLength: 50 }),
 }
 
 /**
@@ -50,19 +52,62 @@ const accountTableTypeBox = createInsertSchema(accountTable, {
   accountType: T.accountType,
 })
 
-const userTable = sqliteTable('user', {
-  userId: text('user_id').notNull().primaryKey(),
-  userName: text('user_name').notNull(),
-  userType: text('user_type').notNull(),
-  otherInfo: text('other_info'),
-})
+const userTableTypeBox = {
+  tableName: 'user',
+  columns: Type.Object({
+    user_id: T.userId,
+    user_name: T.userName,
+    user_role: T.userRole,
+    other_info: T.otherInfo,
+  }),
+}
 
-const userTableTypeBox = createInsertSchema(userTable, {
-  userId: T.userId,
-  userName: T.userName,
-  userType: T.userType,
-  otherInfo: T.otherInfo,
-})
+/**
+ * generate DDL from typebox object
+ * for all of the tables
+ * @param typebox
+ * @returns
+ *
+ * required type mapping for sqlite, from typebox to sqlite
+ * such as
+ * Type.String({ minLength: 1, maxLength: 50 }) => TEXT
+ * Type.Number({ minimum: 0, maximum: 1000000000 }) => INTEGER
+ * etc.
+ */
+const genDdl = (typebox: any) => {
+  let ddl = `CREATE TABLE ${typebox.tableName} (`
+
+  const columns = Object.keys(typebox.columns.properties)
+  const columnDefs = columns.map((column) => {
+    const typeDef = typebox.columns.properties[column]
+    let sqliteType = ''
+
+    if (typeDef.type === 'string') {
+      sqliteType = 'TEXT'
+    } else if (typeDef.type === 'number') {
+      sqliteType = 'INTEGER'
+    } else if (typeDef.type === 'boolean') {
+      sqliteType = 'BOOLEAN'
+    } else if (typeDef.type === 'blob') {
+      sqliteType = 'BLOB'
+    } else if (typeDef.type === 'array') {
+      sqliteType = 'TEXT'
+    } else if (typeDef.type === 'object') {
+      sqliteType = 'TEXT'
+    } else if (typeDef.type === 'integer') {
+      sqliteType = 'INTEGER'
+    } else {
+      throw new Error(`Unsupported type: ${typeDef.type}`)
+    }
+
+    return `${column} ${sqliteType}`
+  })
+
+  ddl += columnDefs.join(', ')
+  ddl += ');'
+
+  return ddl
+}
 
 /**
  * queries for d1
@@ -70,14 +115,21 @@ const userTableTypeBox = createInsertSchema(userTable, {
  *
  */
 const queries = {
-  // endpoints.root
   root: {
     topView: {
       query: `select * from account`,
     },
   },
 
-  // endpoints.user
+  /**
+   * @see /economy/user/register
+   *
+   */
+  'user.register': {
+    query: (params: Static<typeof userTableTypeBox.columns>) => {
+      return `INSERT INTO user (user_id, user_name, user_role) VALUES ('${params.user_id}', '${params.user_name}', '${params.user_role}');`
+    },
+  },
 }
 
-export { accountTable, accountTableTypeBox, userTable, userTableTypeBox, queries }
+export { accountTable, accountTableTypeBox, genDdl, userTableTypeBox, queries }
