@@ -8,7 +8,6 @@ import * as schema from '../dao/schema'
 
 export const endpoints = {
   /**
-   * @alias /economy
    * ポイントエコノミーシステムの初期ページを表示するためのHTMLとTailwindCSS, ハイドレーションするJavascriptを作成します。
    * javascriptのスクリプトは、scriptタグの中に記載します。
    *
@@ -16,23 +15,6 @@ export const endpoints = {
   root: {
     endpoint: '/economy',
     middleware: [],
-    handler: (app: Hono<{ Bindings: Bindings }>) => async (c: Context) => {
-      return c.html(
-        <div hx-target="next div">
-          <button type="button" hx-get={endpoints.user.root} />
-          {/* {Object.keys(endpoints).map((key) => {
-            if (typeof endpoints[key] === 'string') {
-              return <button type="button" hx-get={endpoints[key]} />
-            }
-            return Object.keys(endpoints[key]).map((key2) => {
-              return <button type="button" hx-get={endpoints[key][key2]} />
-            })
-          })} */}
-          <div />
-          <script>console.log('hello world')</script>
-        </div>,
-      )
-    },
     query: (id: string) => {
       return `select * from root where ID = ${id}`
     },
@@ -79,30 +61,6 @@ export const endpoints = {
        * - status code 500
        * - html
        */
-      handler: (app: Hono<{ Bindings: Bindings }>) => async (c: Context) => {
-        const { email, user_name, user_role } = await c.req.parseBody()
-        const user_id = new crypto.randomUUID().toString()
-        const query = endpoints.user.register.query.insert_user({
-          email,
-          user_id,
-          user_name,
-          user_role,
-        })
-        await c.env.D1DB.prepare(query)
-
-        // check inserted or not
-        const query2 = "select * from user where user_id = 'user_id'"
-        const result = await c.env.D1DB.prepare(query2)
-        if (result === null) {
-          // return status code 500
-          // TODO: check this or 'onError' in hono
-          c.status(500)
-          c.header('X-Status-Reason', 'User not inserted')
-          c.header('X-Message', 'User not inserted')
-          return c.html(<div>user not inserted</div>)
-        }
-        // TODO: Add a return statement for the successful case
-      },
       query: {
         // TODO: not nullのキーが欠けているとき静的型検査でエラーを出してほしい
         insert_user: (params: Static<typeof schema.userTableTypeBox.columns>) => {

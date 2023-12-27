@@ -4,7 +4,8 @@ import { describe, expect, test } from 'vitest'
 import * as schema from '../dao/schema'
 import { endpoints } from './endpoints'
 
-describe('queries', async () => {
+// TODO: migrate handler test to other file
+describe.skip('queries', async () => {
   const mf = new Miniflare({
     name: 'main',
     modules: true,

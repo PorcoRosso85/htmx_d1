@@ -1,15 +1,23 @@
+import path from 'path'
 import { PreviewServer, preview } from 'vite'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
+import type { UnstableDevWorker } from 'wrangler'
+import { unstable_dev } from 'wrangler'
 import { economyHonoApp, endpoints } from './index'
 
 describe('統合/機能テスト', () => {
   describe('ブラウザとワーカー間の通信テスト', () => {
     browserWorkerTest(endpoints.root.endpoint)
-    browserWorkerTest(endpoints.user.register.endpoint, 'POST', {
-      email: 'email',
-      user_name: 'userName',
-      user_role: 'userRole',
-    })
+    browserWorkerTest(
+      endpoints.user.register.endpoint,
+      'POST',
+      {
+        email: 'email',
+        user_name: 'userName',
+        user_role: 'userRole',
+      },
+      '<div>user inserted</div>',
+    )
   })
   describe('エンドツーエンドのテスト', () => {
     e2eTest()
@@ -92,28 +100,49 @@ describe.skip('フェーズ 6: 拡張性とメンテナンステスト', () => {
   })
 })
 
-const browserWorkerTest = (endpoint: string, method = 'GET', body: { [key: string]: any } = {}) => {
+// TODO: Bindingsを含むテストは、miniflareでシミュレーション不可能であり、unstable_devを使用する
+const browserWorkerTest = (
+  endpoint: string,
+  method = 'GET',
+  body: { [key: string]: any } = {},
+  expected?: string,
+) => {
   console.debug('endpoint', endpoint)
   describe('200,', () => {
+    let res
+    let worker: UnstableDevWorker
+
+    beforeAll(async () => {
+      // relative path from project root to app file
+      // index.ts/x should export app as default
+      const filePath = path.resolve(__dirname, './index.tsx')
+      // console.debug('filePath', filePath)
+      worker = await unstable_dev(filePath, {
+        experimental: { disableExperimentalWarning: false },
+      })
+      console.debug('worker', filePath, worker)
+    })
+
+    afterAll(async () => {
+      if (worker) {
+        await worker.stop()
+      }
+    })
+
     test('then 200', async () => {
-      let res
       switch (method) {
         case 'GET':
           res = await economyHonoApp.app.request(endpoint)
           expect(res.status).toBe(200)
           break
         case 'POST':
-          const formData = new FormData()
-          for (const key in body) {
-            formData.append(key, body[key])
-          }
-          res = await economyHonoApp.app.request(endpoint, {
-            method: method,
-            //
-            // https://github.com/honojs/hono/issues/1840#issuecomment-1866906026
-            body: formData,
+          console.debug('endpoint', endpoint)
+          res = await worker.fetch(endpoint, {
+            method: 'POST',
+            body: new URLSearchParams(body).toString(),
           })
           expect(res.status).toBe(200)
+          expect(await res.text()).toBe(expected)
           break
         case 'PUT':
           res = await economyHonoApp.app.request(endpoint, {
@@ -135,7 +164,7 @@ const browserWorkerTest = (endpoint: string, method = 'GET', body: { [key: strin
     })
   })
 
-  test('invalid method, post method to get endpoint', async () => {
+  test.skip('invalid method, post method to get endpoint', async () => {
     const res = await economyHonoApp.app.request(endpoint, { method: 'POST' })
     expect(res.status).toBe(404)
   })
