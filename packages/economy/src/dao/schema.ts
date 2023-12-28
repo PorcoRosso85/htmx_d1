@@ -11,10 +11,14 @@ import { type Static, Type } from '@sinclair/typebox'
  *
  */
 const T = {
+  /** pk OR unique */
   accountId: Type.String({ minLength: 1, maxLength: 50 }),
-  accountName: Type.String({ minLength: 1, maxLength: 100 }),
+  /** lowercased */
+  accountName: Type.String({ minLength: 1, maxLength: 100, pattern: '^[a-z0-9_]+$' }),
+  /** */
   accountType: Type.String({ minLength: 1, maxLength: 50 }),
 
+  /** pk */
   transactionId: Type.String({ minLength: 1, maxLength: 50 }),
   // accountId: Type.String({ minLength: 1, maxLength: 50 }),
   amount: Type.Number({ minimum: 0, maximum: 1000000000 }),
@@ -23,11 +27,13 @@ const T = {
   reason: Type.String({ minLength: 1, maxLength: 200 }),
 
   /**
+   * pk
    * 送信元entityId, 送信先entityId
    * 同じtxIdで、送信元のamountの減少と、送信先のamountの増加を表現する。
    */
   entityId: Type.String({ minLength: 1, maxLength: 50 }),
 
+  /** pk */
   userId: Type.Optional(Type.String({ minLength: 1, maxLength: 50 })),
   email: Type.String({ minLength: 1, maxLength: 50, format: 'email' }),
   userName: Type.String({ minLength: 1, maxLength: 100 }),
@@ -39,6 +45,8 @@ const accountTableTypeBox = {
   tableName: 'account',
   columns: Type.Object({
     account_id: T.accountId,
+    // TODO
+    // account_id: {...T.accountId, metadata: {pk: true}},
     account_name: T.accountName,
     account_type: T.accountType,
   }),
@@ -94,6 +102,14 @@ const genDdl = (typebox: any) => {
     }
 
     return `${column} ${sqliteType}`
+
+    // TODO: uniqueの制約を追加する
+    // let constraints = ''
+    // if (typeDef.unique) {
+    //   constraints += ' UNIQUE'
+    // }
+
+    // return `${column} ${sqliteType}${constraints}`
   })
 
   ddl += columnDefs.join(', ')
@@ -102,4 +118,4 @@ const genDdl = (typebox: any) => {
   return ddl
 }
 
-export { accountTableTypeBox, genDdl, userTableTypeBox }
+export { T, accountTableTypeBox, genDdl, userTableTypeBox }

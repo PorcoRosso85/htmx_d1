@@ -5,8 +5,31 @@ export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
-      includeSource: ['./src/**/*.{js,ts,jsx,tsx}'],
-      exclude: [...configDefaults.exclude, 'packages/template/*'],
+      globals: true,
+      environment: 'node',
+      // include: [
+      //   'src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      //   // 'src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      // ],
+      exclude: [
+        ...configDefaults.exclude,
+        'packages/template/*',
+        'packages/node_modules/*',
+        'node_modules/*',
+      ],
+      cache: false,
+      setupFiles: ['./setup.ts'],
+      coverage: {
+        reporter: [
+          'text',
+          [
+            'lcov',
+            {
+              projectRoot: './',
+            },
+          ],
+        ],
+      },
     },
   }),
 )

@@ -1,7 +1,4 @@
-import { Bindings } from './binding'
-import * as crypto from './crypto'
-
-export { Bindings }
+export { type Bindings } from './binding'
 
 export const config = {
   //   url: 'file:local.db',

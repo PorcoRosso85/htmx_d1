@@ -1,14 +1,15 @@
 import { tbValidator } from '@hono/typebox-validator'
 import { Bindings, config } from '@quantic/config'
-import { type Static } from '@sinclair/typebox'
+import { type Static, Type } from '@sinclair/typebox'
+import { Value } from '@sinclair/typebox/value'
 /**
  * motivation: ポイントエコノミーシステムのルーティングを作成する
  */
 import { Context, Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import { queries } from '../dao'
 import * as schema from '../dao/schema'
+import { T } from '../dao/schema'
 
 /**
  * endpointsは以下のような構造になっています。
@@ -26,7 +27,6 @@ const endpoints = {
    */
   root: {
     endpoint: '/economy',
-    middleware: [],
     query: (id: string) => {
       return `select * from root where ID = ${id}`
     },
@@ -34,7 +34,6 @@ const endpoints = {
 
   user: {
     /**
-     * @alias /economy/user
      * ユーザー情報
      */
     root: {
@@ -43,11 +42,15 @@ const endpoints = {
     },
 
     /**
-     * @alias /economy/user/register
      * ユーザー登録
+     * formデータを受け取るためのUIを提供し、
+     * formデータを受け取り、データベースを更新します。
      */
     register: {
-      endpoint: '/economy/user/register', // ユーザー登録
+      /**
+       * ユーザー登録
+       */
+      endpoint: '/economy/user/register',
       /**
        * @param c
        * - email
@@ -57,7 +60,8 @@ const endpoints = {
        */
       middleware: {
         validation: tbValidator('form', schema.userTableTypeBox.columns, (result, c) => {
-          // FIXME: not working
+          // []untested
+          console.debug('result', result)
           if (!result.success) {
             return c.text('Invalid!', 400)
           }
@@ -67,14 +71,8 @@ const endpoints = {
        * formデータを受け取るためのUIを提供し、
        * formデータを受け取り、
        * データベースに登録します。
-       *
-       * @returns
-       * - status code 200
-       * - status code 500
-       * - html
        */
       query: {
-        // FIXME: not nullのキーが欠けているとき静的型検査でエラーを出してほしい
         insert_user: (params: Static<typeof schema.userTableTypeBox.columns>) => {
           return `INSERT INTO user (user_id, user_name, user_role, email) VALUES ('${params.user_id}', '${params.user_name}', '${params.user_role}', ${params.email});`
         },
@@ -82,22 +80,18 @@ const endpoints = {
     },
 
     /**
-     * @alias /economy/user/update
      * ユーザー更新
      * formデータを受け取るためのUIを提供し、
      * formデータを受け取り、データベースを更新します。
      */
-    update: '/economy/user/update', // ユーザー更新
-
-    delete: '/economy/user/delete', // ユーザー削除
-
-    info: {
-      /** */
-      balance: '/economy/balance', // 残高表示
-
-      /** */
-      history: '/economy/history', // 履歴表示
+    update: {
+      endpoint: '/economy/user/update',
+      query: {},
     },
+
+    /** */
+    delete: '/economy/user/delete',
+
     setting: {
       /** */
       root: '/economy/setting',
@@ -110,29 +104,156 @@ const endpoints = {
     notification: '/economy/notification', // 通知
   },
 
-  transaction: {
+  account: {
     /**
-     * @alias /economy/transaction
-     * 取引
-     * 取引を行うためのUIを提供し、
-     * 取引を行うロジックを実行、データベースを更新します。
-     *
-     * @param {string} originatingEntityId - 取引元のID
-     * @param {string} targetEntityId - 取引先のID
-     * @param {string} amount - 取引金額
-     * @param {string} reasonOfType - 取引の説明
-     * @param {string} transactionType - 取引の種類
-     * @param {string} transactionDate - 取引日
-     * @param {string} transactionId - 取引ID
-     *
-     * 取引の種類は、取引の説明によって決定されます。
+     * アカウント, 口座, 勘定科目
+     * アカウントの作成、更新、削除を行います。
+     * ユーザーは最低一つのアカウントを持ちます
+     * アカウントは一意のIDを持ち、
+     * IDは「ユーザーID＋アカウント名」で構成されます。
+     */
+    root: '/economy/account',
+
+    /**
+     * アカウント作成
+     * アカウントの作成を行います。
+     * アカウントは一意のIDを持ち、
+     * IDは「ユーザーID＋アカウント名」で構成されます。
      *
      */
-    root: '/economy/transaction',
+    create: {
+      endpoint: '/economy/account/create',
+      query: {
+        insert_account: (params: Static<typeof schema.accountTableTypeBox.columns>) => {
+          return `INSERT INTO account (account_id, account_name, account_type) VALUES ('${params.account_id}', '${params.account_name}', '${params.account_type}');`
+        },
+        /**
+         *
+         * 既存のaccount_idを取得します。
+         * この関数は、account_idがユニークであることを保証するために必要です。
+         * account_idがバリデーションされたときのみ、クエリを実行します。
+         */
+        select_account_id: (account_id: string) => {
+          return Value.Check(T.accountId, account_id)
+            ? `SELECT account_id FROM account WHERE account_id = '${account_id}';`
+            : (() => {
+                throw new Error('invalid account id')
+              })()
+        },
+      },
+      /**
+       * account_idの生成
+       * account_nameのバリデーションを強化し, バリデーションに成功した場合のみaccount_idを生成します。
+       */
+      account_id: (user_id: string, account_name: string) => {
+        return Value.Check(T.accountName, account_name)
+          ? `${user_id}_${account_name}`
+          : (() => {
+              throw new Error('invalid account name')
+            })()
+      },
+      /**
+       * 生成されたaccount_idがデータベースに存在しないことを保証
+       * この関数は、account_idがユニークであることを保証するために必要です。
+       *
+       * @param {string} account_id - アカウントID
+       * @returns {boolean} - アカウントIDが存在しない場合はtrueを返します。
+       */
+      // [] untested
+      validateAccountIdInDatabase: (account_id: string) => {
+        // query account_id
+        const query = endpoints.account.create.query.select_account_id(account_id)
+        query
+      },
+    },
+    update: '/economy/account/update',
+    delete: '/economy/account/delete',
   },
 
-  external: '/economy/external', // 外部サービス連携
+  transaction: {
+    /**
+     * 取引
+     * 取引とは、ある口座から別の口座への数値の移動です。
+     * この口座のユーザーは問わず、
+     * 自らの別の口座への移動も取引として、あるいは、
+     * 別のユーザーの口座への移動も取引として扱います。
+     *
+     * 取引を行うためのUIを提供し、取引を行うロジックを実行、データベースを更新します。
+     */
+    execute: {
+      /**
+       * 取引実行
+       *
+       * @param {string} originatingEntityId - 取引元のID
+       * @param {string} targetEntityId - 取引先のID
+       * @param {string} amount - 取引金額
+       * @param {string} reasonOfType - 取引の説明
+       * @param {string} transactionType - 取引の種類
+       * @param {string} transactionDate - 取引日
+       * @param {string} transactionId - 取引ID
+       *
+       * 取引の種類は、取引の説明によって決定されます。
+       *
+       */
+      endpoint: '/economy/transaction/execute',
+      query: {},
+    },
+    /**
+     * ユーザー情報
+     * ユーザーの各残高を表示します。
+     */
+    balance: {
+      endpoint: '/economy/transaction/balance',
+      query: {},
+    },
 
+    /**
+     * ユーザー情報
+     * ユーザーの各残高/各取引の履歴を表示します。
+     */
+    history: {
+      endpoint: '/economy/transaction/history',
+    },
+  },
+
+  open: {
+    root: {
+      endpoint: '/economy/open',
+    },
+
+    /**
+     * アルゴリズムエンドポイントは、
+     * 基準となる数値と選択されたアルゴリズムから計算された数値を返します。
+     */
+    algorithm: {
+      basic: {
+        /**
+         * このエンドポイントは、リクエストした数値をそのまま返します。
+         */
+        oneToOne: {
+          endpoint: '/economy/open/algorithm/basic/oneToOne',
+        },
+      },
+      accountingStandards: {
+        /**
+         * 日本の会計基準
+         */
+        jpn: {
+          endpoint: '/economy/open/algorithm/accountingStandards/jpn',
+          middleware: {},
+          query: {},
+        },
+        /**
+         * 国際会計基準
+         */
+        global: {
+          endpoint: '/economy/open/algorithm/accountingStandards/global',
+          middleware: {},
+          query: {},
+        },
+      },
+    },
+  },
   point: {
     root: '/economy/point',
     expiry: '/economy/point/expiry', // ポイント有効期限
@@ -228,7 +349,7 @@ app
       // TODO: when test this, 'unstable_dev' is required
       await c.env.D1DB.prepare(query)
 
-      // TODO: test
+      // TODO: untested
       // check inserted or not
       const query2 = "select * from user where user_id = 'user_id'"
       const result = await c.env.D1DB.prepare(query2)
@@ -252,3 +373,16 @@ const economyHonoApp = {
 export { economyHonoApp, endpoints }
 
 export default app
+
+if (import.meta.vitest) {
+  const { describe, test, expect } = await import('vitest')
+
+  describe('account.create.account_id', () => {
+    test('account_id', () => {
+      const user_id = 'user_id'
+      const account_name = 'account_name'
+      const account_id = endpoints.account.create.account_id(user_id, account_name)
+      expect(account_id).toBe('user_id_account_name')
+    })
+  })
+}

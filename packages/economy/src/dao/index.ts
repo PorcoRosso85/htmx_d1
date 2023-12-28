@@ -1,1 +1,1 @@
-export { userTable, userTableTypeBox, accountTable, accountTableTypeBox, queries } from './schema'
+export { userTableTypeBox, accountTableTypeBox } from './schema'
