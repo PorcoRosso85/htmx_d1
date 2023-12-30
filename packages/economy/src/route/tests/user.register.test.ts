@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
-import { economyHonoApp, endpoints } from '../../../route/index'
-import { apiTest, browserWorkerTest, e2eTest } from '../utils'
+import { economyHonoApp, endpoints } from '../index'
+import { apiTest, browserWorkerTest, e2eTest } from './utils'
 
 describe.skip('/economy/user', () => {
   describe('/economy/user/register', () => {
@@ -122,5 +122,16 @@ describe.skip('フェーズ 6: 拡張性とメンテナンステスト', () => {
   })
   describe('API依存性テスト', () => {
     // ここにテストケースを記述
+  })
+})
+
+describe.skip('query', () => {
+  test('query その１', async () => {
+    const query = endpoints.user.register.query.insert_user({
+      email: 'email',
+      user_id: 'user_id',
+      user_name: 'user_name',
+      user_role: 'user_role',
+    })
   })
 })

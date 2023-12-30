@@ -53,3 +53,44 @@ describe('Miniflare and persistency', async () => {
     })
   })
 })
+
+describe.skip('Durable Objects', async () => {
+  // [] if use DO
+  const mf = new Miniflare({
+    modules: true,
+    durableObjects: { TEST_OBJECT: 'TestObject' },
+    script: `
+      export class TestObject {
+        constructor(state) {
+          this.storage = state.storage;
+        }
+
+        async fetch(request) {
+          const url = new URL(request.url);
+          if (url.pathname === "/put") await this.storage.put("key", 1);
+          return new Response((await this.storage.get("key")).toString());
+        }
+      }
+
+      export default {
+        async fetch(request, env) {
+          const stub = env.TEST_OBJECT.get(env.TEST_OBJECT.idFromName("test"));
+          return stub.fetch(request);
+        }
+      }
+    `,
+  })
+
+  const ns = await mf.getDurableObjectNamespace('TEST_OBJECT')
+  const id = ns.idFromName('test')
+  const stub = ns.get(id)
+  const doRes = await stub.fetch('http://localhost:8787/put')
+  console.debug(await doRes.text()) // "1"
+
+  const res = await mf.dispatchFetch('http://localhost:8787/')
+  console.debug(await res.text()) // "1"
+
+  test('durable object', async () => {
+    expect(await res.text()).toBe('1')
+  })
+})
