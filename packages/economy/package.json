@@ -15,11 +15,14 @@
     "@hono/typebox-validator": "^0.2.2",
     "@libsql/client": "0.4.0-pre.5",
     "@quantic/config": "workspace:^",
-    "@sinclair/typebox": "^0.31.28"
+    "@sinclair/typebox": "^0.31.28",
+    "xstate": "^5.4.1"
   },
   "devDependencies": {
     "@miniflare/d1": "^2.14.1",
     "@miniflare/shared": "^2.14.1",
+    "@testing-library/react": "^14.1.2",
+    "jsdom": "^23.0.1",
     "miniflare": "^3.20231030.4"
   }
 }
