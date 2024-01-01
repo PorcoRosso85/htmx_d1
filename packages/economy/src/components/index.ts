@@ -1,1 +1,1 @@
-export { buttonComponents } from './GetBank'
+export { buttonComponents } from './buttonComponents'

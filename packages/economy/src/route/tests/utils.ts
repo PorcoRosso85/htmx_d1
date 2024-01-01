@@ -1,109 +1,74 @@
 import path from 'path'
+import { Hono } from 'hono'
 import { PreviewServer, preview } from 'vite'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import type { UnstableDevWorker } from 'wrangler'
 import { unstable_dev } from 'wrangler'
-import { economyHonoApp, endpoints } from '../index'
+// import { economyHonoApp, endpoints } from '../index'
 
-export { browserWorkerTest, e2eTest, apiTest }
+export { browserWorkerTest, apiTest }
 
 const browserWorkerTest = (
+  describe: string,
+  app: Hono,
   endpoint: string,
   method = 'GET',
   body: { [key: string]: any } = {},
   expected?: string,
 ) => {
   console.debug('endpoint', endpoint)
-  describe('200,', () => {
-    let res
-    let worker: UnstableDevWorker
+  let res
+  let worker: UnstableDevWorker
 
-    beforeAll(async () => {
-      // relative path from project root to app file
-      // index.ts/x should export app as default
-      const filePath = path.resolve(__dirname, './index.tsx')
-      // console.debug('filePath', filePath)
-      worker = await unstable_dev(filePath, {
-        experimental: { disableExperimentalWarning: false },
-      })
-      console.debug('worker', filePath, worker)
+  beforeAll(async () => {
+    // relative path from project root to app file
+    // index.ts/x should export app as default
+    const filePath = path.resolve(__dirname, '../../route/index.tsx')
+    // console.debug('filePath', filePath)
+    worker = await unstable_dev(filePath, {
+      experimental: { disableExperimentalWarning: false },
     })
-
-    afterAll(async () => {
-      if (worker) {
-        await worker.stop()
-      }
-    })
-
-    test('then 200', async () => {
-      switch (method) {
-        case 'GET':
-          res = await economyHonoApp.app.request(endpoint)
-          expect(res.status).toBe(200)
-          break
-        case 'POST':
-          console.debug('endpoint', endpoint)
-          res = await worker.fetch(endpoint, {
-            method: 'POST',
-            body: new URLSearchParams(body).toString(),
-          })
-          expect(res.status).toBe(200)
-          expect(await res.text()).toBe(expected)
-          break
-        case 'PUT':
-          res = await economyHonoApp.app.request(endpoint, {
-            method: method,
-            body: JSON.stringify(body),
-          })
-          expect(res.status).toBe(200)
-          break
-        case 'DELETE':
-          res = await economyHonoApp.app.request(endpoint, {
-            method: method,
-            body: JSON.stringify(body),
-          })
-          expect(res.status).toBe(200)
-          break
-        default:
-          break
-      }
-    })
+    console.debug('worker', filePath, worker)
   })
 
-  test.skip('invalid method, post method to get endpoint', async () => {
-    const res = await economyHonoApp.app.request(endpoint, { method: 'POST' })
-    expect(res.status).toBe(404)
+  afterAll(async () => {
+    if (worker) {
+      await worker.stop()
+    }
   })
 
-  test.skip('エラーレスポンス（404、500）のテスト', () => {
-    // 404のエンドポイント、500のエンドポイントを実装済み
-  })
-}
-
-const e2eTest = () => {
-  // miniflareでシミュレーション不可能であり、dploy後に実施する
-  describe('ユーザーアクションからデータストレージまでの流れ', () => {
-    test('ハイドレーションが読み込まれている', () => {})
-    test('ヘッダーが認識されている', () => {})
-    test('ボタンが正しく設定されている', () => {
-      // ボタンが正しく設定されている
-    })
-  })
-  test.skip('パフォーマンスの測定（レイテンシ、スループット）', async () => {
-    const start = performance.now()
-
-    // APIリクエストの実行
-    // deloy先にアクセスする
-    // const url = 'https://example.com'
-    // const app = new URL(url)
-    const response = await fetch(app, url)
-    const end = performance.now()
-
-    // レスポンスタイムの計測
-    const responseTime = end - start
-
-    // レスポンスタイムが500ミリ秒未満であることを確認
-    expect(responseTime).toBeLessThan(500)
+  test(describe, async () => {
+    switch (method) {
+      case 'GET':
+        res = await app.request(endpoint)
+        expect(res.status).toBe(200)
+        break
+      case 'POST':
+        console.debug('endpoint', endpoint)
+        res = await worker.fetch(endpoint, {
+          method: 'POST',
+          body: new URLSearchParams(body).toString(),
+        })
+        expect(res.status).toBe(200)
+        expect(await res.text()).toBe(expected)
+        break
+      case 'PUT':
+        res = await app.request(endpoint, {
+          method: method,
+          body: JSON.stringify(body),
+        })
+        expect(res.status).toBe(200)
+        break
+      case 'DELETE':
+        res = await app.request(endpoint, {
+          method: method,
+          body: JSON.stringify(body),
+        })
+        expect(res.status).toBe(200)
+        break
+      default:
+        break
+    }
   })
 }
 
