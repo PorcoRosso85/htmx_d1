@@ -252,12 +252,14 @@ const testMap: TestMapType = {
     [
       testFunctions.browserWorkerConn,
       [
+        // 'hx-boost="true"',
         '<a',
         'href="/user"',
         'href="/bank"',
         'href="/transaction"',
         'href="/support"',
         'hx-target="next main"',
+        '<main>',
       ],
     ],
   ],

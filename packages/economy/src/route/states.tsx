@@ -1,6 +1,5 @@
 import { Context, Hono } from 'hono'
 import { createMachine } from 'xstate'
-import * as components from '../components'
 
 /**
  * このオブジェクトにエンドポイントを定義しないと
@@ -10,11 +9,14 @@ import * as components from '../components'
 const states = {
   /**
    * from /
-   * to [/user, /notFound,/onError, /bank, /transaction, /support]
+   * to [/user, /bank, /transaction, /support]
    */
   'get /': {
     on: {
       'get /user.200': 'get /user',
+      'get /bank.200': 'get /bank',
+      'get /transaction.200': 'get /transaction',
+      'get /support.200': 'get /support',
     },
   },
 
@@ -29,32 +31,50 @@ const states = {
    * to [/user/*, /bank, /transaction]
    */
   'get /user': {},
+
   // [] postとgetの統合、postにリクエストボディがある場合はpostに、ない場合はgetにする
-  'post /user/register': {
-    on: {
-      'post /user/register.200': 'get /user',
-    },
-  },
+  'post /user/register': {},
+
   'post /user/update': {},
+
   'post /user/delete': {},
-  'get /setting': {},
+
+  'get /user/setting': {},
+
+  /** every api for each items to be registerd/updated */
+  'post /user/setting': {},
+
   'post /setting/auto': {},
+
   'get /notification': {},
+
   'get /bank': {},
+
   'post /bank/create': {},
+
   'post /bank/update': {},
+
   'post /bank/delete': {},
+
+  'get /transaction': {},
+
   'post /transaction/validornot': {},
+
   'post /transaction/duplicatedornot': {},
+
   'post /transaction/execute': {},
+
   'post /open/algorithm/basic/oneToOne': {},
+
   'post /open/algorithm/accountingStandards/jpn': {},
+
   'post /open/algorithm/accountingStandards/global': {},
+
   'get /support': {},
 }
 
 export const nameOfMachine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDcCWYDusAEBDAdhNmADZgC2Y+ALrAHQzXYD0AxIywK6xgBOdAJgAMQgNpCAuolAAHAPaxU1VHPzSQAD0QAWAGwBGQQICsQgMzGz2swE4h2gQHYANCACeiRwA4zdXV-1hf21tIS8vXQBfSNc0TBwCIlIKKlo6eVgmZm4+Zl4wKFRMvlYMrJzePIKi6j5BEXEpJBAMpRU1Zq0EPUMBE3NLazsHF3cdG0MzIV0TYwCrKZtomJB8OQg4dTisPEJiMkoaeGbW5VV1LoBaXVcPBGu6ESfnl8do2PQdxP2Uo4YwLLqU7tC6IKxCOg+RyWfS6KZCGxeW6eHx0MzQoTCMy6bxed4gbYJPbJQ5pDjMNbUABick4hCBCja506iH0jl8FjMgRsU28tjCyIQumFdAc2hsjhsM2hOLeK0JuySB1S9HJqgAorxeHJeAzFGcOqAuvovBCbAJ5gYBDzjMYnIL9PpzXRHE8ZtpAn1rPiFd8SSr-uUeLqToyDaChRNHlyzGYBBYAvozEixt1EYJtHMhLaTT4zD7PkSlb80mUuMGqoViiHZGGQSyEE5DJZobDYVK+im7uLDM8ndNk9pJVF5YXFT9SfQy9kK5wZBBcLU9UzDZpWcYbKL-NCs9MswJBY4BNpITYz+eJUfbAX4uP-X9pxVmBsyEvQ-r60bWTM6GyArMuQiaZtEFAI-EccVHFdJ1THREcPlvP1lT+ckeGoZR8CgZdwwbE0BFFYwZlMOxdBCOxRjufRQl-cUbCHR0Zi8Qiby+YlkNLBQsjQjCoGYXBOGoORsM-NcEH0Ddf1MEQqNsLwj10YwHSTE8+lMBx7CCHwWKLCcA3JSlUAAM1QABjRcROBZkvzEkVSOmeMhGHPQLUFExHEec85KYhSJQibS73Y1UARYAAjAgAGthKs0T+0eDdkylcUfEIh0hDZQQMTSqY2VtJZR0QtiSynTjQoi5gTPyRcwCi1djQkpiYzSkJ2WhLtEF0Ry6Dos8Nzcj1YX8pCivSErmDC-BwuyecqpqiNxPczMYwEHKEQ6ijWUc4wXSk5acSdQJBsKycRsyUqJufZI31rD9ouNDrf0cXNM2zO1rRA1MvA9SFaNCfaLWhQ7i2O6dqF4AhYFwEyDWYZBcBIVAIB1SlZtwvpIW8QI2QsEIBH8QUbDmF1PIRLkNwlQHdIfUbQfByHoYgOd4bM2pEd4ZH3xXOa0roO1c1IgmRHjRTU2McVRQgnlwjk2ZjAp+8ONO5gafwCGofaZgwA0MATIE6qOZw6ykwhO15kdWwh3ZQVrHwu1aIiHldAmPF8tYoGA2nOQZCoPiSCgHUlAAC3IMbcEUEzmFUMAABU5AAeXwPXrs5hsmO+-wOumaVbTMfGRDRY8pWzAwQmxOXApOrJPe9uG-d4QPg8hkzaRoVBMIAZWoRJcF4CBYGYAArGRV0s2rEDtLq5KHCxs18mxBXRE97DPPkhYTMvho9r38B92v674kym7pHiO67nu+6gEg5DCkgUeshwHXTd0pQgiIQix9fjtQud5F4ahb5iyUGV-ywnFGKCw89xI8wlsYSUlh0Tk2WEAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDcCWYDusAEBDAdhNmADZgC2Y+ALrAHQzXYD0AxIywK6xgBOdAJgAMQgNpCAuolAAHAPaxU1VHPzSQAD0QAWABwBGQQICsIg9u1CA7AICc2gDQgAnomO7bdbQDYrugMza+hb6trZWAL4RTmiYOAREpBRUtAxgTGwczABGBADWgiLiUkgg8orKqupaCHqGAiZmwZY29k6utVaeVt7+3g3G-bq6QZHRILFYeITEZJQ09Fns6SzUvASwuADGlfiFYpLq5UoqaqU1dUamQuYtdo4ubv66gs-e2lZC3vp+fVEx6CmCVmyQWaQyywysE4MnkvGo+2KRwUJyq5x0BiuTQs1nu7R0Anqw28xgEXW0tn8-mMYwBcWmiTmKXo5Qy3D4zF4YCgqFg1D4rFZXB4vE53N5-P4wgOJVkKN21Qx9UaN2auLajwQthEdF6wX0N28vh8tii43wcggcHUk3iMyS81oyIqp0VCAAtN58R7vP8JoC7YzQakss7UWdQDVAkI6AErMZ9IF-IT9MZtP5vemBHRSXp7EJjFSrPpdH7bQyQY7FitmBbqAAxOScQhhhXohA-fx0an+RMFrqq2zGb2-bvx1MFw0k4xlgMVh3M8EsVQAUV4vDkvFbrvbJZjtgE5n03xGyap3v8Vm0dCEFN03iHaY+Jln9OBC7BWXZW9KxzbkcQYtDCEXtCW0AQgmedNvWMWxvC8axLDTB9tATfxXyBe0mTBIVmG-MUeT5PhtzRACEDJQxC3jG4bGeNMrG9bUY2TBMwlMd53n0DDA0rRdcPwmEIFwfkSIjTREFTTwfF0eN-FvDwhgYzUKX3MJbBLYxSQorjxnLd9sNSfiRWYK0yBE395R3Mjj2zH4DD6ElAggjNNSHF5dBEfRgjTQIjW4+cDOrNljJ4ahlHwKBRLdY8u1kxNhB8HpvWCGNglsYYDWEKwbHTfz9ODFkFGCjlQvCyKLJdUjxI7WCcxVCkgjCPpvUxY04NguNPkLPKsIKuhcNK1AIuYXBOGoOQot3WqJyELzSUGOTz01EZDF0UxDwsFD+nQ3S53yqsl1rORlAAM1QLZhKsspLKqmpj3g94vmeODwN0YQvU1UIXn6D44P7bKsx6oMDqyXJ8DySayKAm9QOCCDE1PTMui8GlqXeYsSQEX1drfXqDtwsG8mYLYuWEsBIeqyTY0LRNi3TbVUN0ZLE2vAY7Go96fiB3icKKlhCbwmQhPMuVKrEu6aRR3tnoTLyGgeDoTCsG8wjegtBl8PoZxxzDgb4vmcnyEykhF66xei7xUuLGT718ARLwLGCKS8K97Dk2XPm0bmPxDGs1g2bZ-zN8M3WhkD9DA+GoJcjoqLoSl7Y88J1dCb3Av6g3-fwTYdlOZhkFwEhUAgTc6wpu6GljPxE1JDyTAsJnNSNeDwITWa29t7G6V1nnDMz9Zs8DvOIBhIuLv5EveDLiqQ93Wa6pLYkIJAgt9BHCD488rGRHCPydZ4n3Cr5VYB5z3ZmDADQwC2MbyZnoO7rkur7IPUZGg+jpLeVocRGy2bQk1mnPquE5AyCoCNEgUBNxKAABbkENooLYzBVBgAACpyAAPL4DvqLWeZE1qxmkjJDaNh+gCGSrNZWZI0IM3ttOIB+MDagPAYXKBvBYHwO2FsJsNAhpQAAMrUASLgXgEBYDMAAFYyDEn+K6NRSTxxkhSGwPwPiWw-hJawxg6AcysHJcOP0GH62PsgsB+AIFsI4SNLY3DmxlUEcI0R4ioAkDkLkEg5cCQXlTDmK8ejNKUl8JpL2+8Ap9SyNCWEm5qCeIQGHWG4FIKI2UsIRREEgjph8KYUsZogA */
   id: 'views and elements',
   tsTypes: {} as import('./states.typegen').Typegen0,
   schema: {
@@ -77,7 +97,10 @@ type BaseType = {
   client?: {
     anchors: string[]
     elements: {
-      [key: string]: () => (JSX.Element | undefined) | (JSX.Element | undefined)[]
+      [key: string]: () =>
+        | (JSX.Element | undefined)
+        | (JSX.Element | undefined)[]
+        | ((props: any) => JSX.Element | undefined)
     }
     contain?: string[]
   }
@@ -110,6 +133,11 @@ type Ends = {
 // これにより、FeatsオブジェクトはStatesのキーのみを含むことが保証されます
 const feats: Ends = {
   // const feats = {
+
+  /**
+   * /user, /bank, /transaction, /support機能のトリガーを提供する
+   * トリガーは、各エンドポイントへのアンカー要素
+   */
   'get /': {
     end: '/',
     error: {},
@@ -126,8 +154,12 @@ const feats: Ends = {
          * - service-workerスクリプト, PWA
          * - layout
          */
-        root: () => {
-          return <></>
+        Root: (props = { children: null }) => {
+          return (
+            <div hx-boost="true" {...props}>
+              {props.children}
+            </div>
+          )
         },
         anchors: (): JSX.Element[] | undefined => {
           return feats['get /'].client?.anchors.map((url, index) => (
@@ -136,11 +168,10 @@ const feats: Ends = {
                 {url}
               </a>
               <br />
-              <main />
             </>
           ))
         },
-        header: () => {
+        Header: () => {
           return (
             <header>
               <h1>Header</h1>
@@ -150,14 +181,18 @@ const feats: Ends = {
       },
     },
   },
-  'get /bank': {
-    end: '/bank',
-    error: {},
-  },
 
+  /**
+   * /user/*機能のトリガーを提供する
+   * トリガーは、各エンドポイントへのアンカー要素
+   */
   'get /user': {
     end: '/user',
     error: {},
+    client: {
+      anchors: ['/user/setting', '/user/register', '/user/update', '/user/delete'],
+      elements: {},
+    },
   },
 
   /**
@@ -202,6 +237,10 @@ const feats: Ends = {
       },
     },
   },
+  'get /bank': {
+    end: '/bank',
+    error: {},
+  },
 }
 
 const app = new Hono()
@@ -216,7 +255,19 @@ app
   })
 
   .get(feats['get /'].end, (c) => {
-    return c.html(<>{feats['get /'].client?.elements.anchors()}</>)
+    const RootCompo = feats['get /'].client?.elements.Root
+    return RootCompo !== undefined
+      ? c.render(
+          <div hx-target="next main">
+            <RootCompo>{feats['get /'].client?.elements.anchors()}</RootCompo>
+            <main />
+          </div>,
+        )
+      : console.error('RootCompo is undefined')
+  })
+
+  .get(feats['get /user'].end, (c) => {
+    return c.text('get /user')
   })
 
   .get(feats['get /bank'].end, (c) => {
