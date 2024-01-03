@@ -51,22 +51,22 @@ app
     await next()
   })
 
-  .get('/', (c) =>
-    c.render(html`
-           <div hx-boost="true" hx-target="next div">
-              <!-- <button type="button" hx-get="/todo">todo</button> -->
-              <!-- <button type="button" hx-get="/join">join</button> -->
-              <!-- <button type="button" hx-get="/insentive">insentive</button> -->
-              <!-- <button type="button" hx-get="/do">do</button> -->
-              <!-- <button type="button" hx-get=${typeboxHonoApp.endpoint}>typebox</button> -->
-              <div />
-          </div>
-          <div hx-boost="true">
-            <a href="/eco" hx-target="main">eco</a>
-            <main />
-          </div>  
-          `),
-  )
+  // .get('/', (c) =>
+  //   c.render(html`
+  //          <div hx-boost="true" hx-target="next div">
+  //             <!-- <button type="button" hx-get="/todo">todo</button> -->
+  //             <!-- <button type="button" hx-get="/join">join</button> -->
+  //             <!-- <button type="button" hx-get="/insentive">insentive</button> -->
+  //             <!-- <button type="button" hx-get="/do">do</button> -->
+  //             <!-- <button type="button" hx-get=${typeboxHonoApp.endpoint}>typebox</button> -->
+  //             <div />
+  //         </div>
+  //         <!-- <div hx-boost="true"> -->
+  //           <a href="/eco" hx-target="main">eco</a>
+  //           <main />
+  //         <!-- </div>   -->
+  //         `),
+  // )
 
   // .get('/static/*', serveStatic({ root: './' }), (c) => {
   //   c.header('Service-Worker-Allowed', '/')
@@ -89,6 +89,6 @@ app
   // .route('/', insentiveHonoApp.app)
   // .route('/', doHonoApp.app)
   // .route('/', typeboxHonoApp.app)
-  .route('/eco', economyHonoApp)
+  .route('/', economyHonoApp)
 
 export default app

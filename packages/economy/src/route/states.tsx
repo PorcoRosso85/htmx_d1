@@ -93,7 +93,7 @@ type BaseType = {
   error: object
   [key: string]: any
   component?: JSX.Element
-  query?: (params: any) => string
+  query?: {[key: string]: (params: any) => string}
   client?: {
     anchors: string[]
     elements: {
@@ -217,7 +217,9 @@ const feats: Ends = {
      * - user_name
      * - user_role
      */
-    query: (params) => '',
+    query: {
+      insert_user: (params) => 
+    },
     /**
      * component should render anchor tag to
      * - /user

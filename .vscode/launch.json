@@ -52,5 +52,19 @@
       "internalConsoleOptions": "neverOpen"
       // "console": "integratedTerminal"
     }
+    {
+      "name": "vitest",
+      "type": "node",
+      "request": "launch",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "runtimeExecutable": "/home/user/pjs/node/.devbox/nix/profile/default/bin/pnpm",
+      "runtimeArgs": ["vitest","${file}"],
+      "skipFiles": ["<node_internals>/**"],
+      "internalConsoleOptions": "neverOpen",
+      "console": "integratedTerminal"
+    }
   ]
 }
