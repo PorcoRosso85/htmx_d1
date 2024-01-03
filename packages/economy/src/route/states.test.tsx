@@ -255,7 +255,7 @@ const testMap: TestMapType = {
   // []メソッドを取得して入れるか
   // 'get /bank': [testFunctions.browserWorkerConn],
   'post /user/register': [
-    [testFunctions.browserWorkerConn, ['<button type="button">', 'Register']],
+    [testFunctions.browserWorkerConn, ['<button type="button">', 'Register', '<a', 'href="/user"']],
   ],
 }
 

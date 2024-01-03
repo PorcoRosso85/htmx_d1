@@ -77,7 +77,7 @@ type BaseType = {
   views?: {
     anchors: string[]
     elements: {
-      anchors: () => JSX.Element | undefined
+      anchors: () => (JSX.Element | undefined) | (JSX.Element | undefined)[]
     }
     contain?: string[]
   }
@@ -151,13 +151,14 @@ const feats: Ends = {
       elements: {
         /** anchorsのリンクへのanchor要素 */
         // [] todo
-        anchors: (): JSX.Element | undefined => {
-          for (const anchor of feats['post /user/register'].anchors) {
-            return <a href={anchor}>{anchor}</a>
-          }
+        anchors: () => {
+          return feats['post /user/register'].views?.anchors.map((url, index) => (
+            <a key={index.toString} href={url}>
+              {url}
+            </a>
+          ))
         },
       },
-      // contain: ['<a href="/user">/user</a>'],
     },
   },
 }
@@ -181,7 +182,7 @@ app
     return c.html(
       <>
         <button type="button">Register</button>
-        {/* {feats['post /user/register'].views?.elements.anchors()} */}
+        {feats['post /user/register'].views?.elements.anchors()}
       </>,
     )
   })
