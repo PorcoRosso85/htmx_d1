@@ -74,19 +74,26 @@ type BaseType = {
   [key: string]: any
   component?: JSX.Element
   query?: (params: any) => string
+  views?: {
+    anchors: string[]
+    elements: {
+      anchors: () => JSX.Element | undefined
+    }
+    contain?: string[]
+  }
 }
 
-type GetType<T = any> = BaseType & {}
+type GetType<T = {}> = BaseType & T
 
 type PostType = BaseType & {
   validate?: (c: Context) => void
 }
 
-type DeleteType<T = any> = BaseType & {}
+type DeleteType<T = {}> = BaseType & T
 
-type PutType<T = any> = BaseType & {
+type PutType<T = {}> = BaseType & {
   validate: (c: Context) => void
-}
+} & T
 
 type Ends = {
   [K in keyof typeof states]: K extends `get /${string}`
@@ -107,7 +114,14 @@ const feats: Ends = {
     error: {},
   },
 
-  /** */
+  'get /user': {
+    end: '/user',
+    error: {},
+  },
+
+  /**
+   *
+   */
   'post /user/register': {
     end: '/user/register',
     /**
@@ -128,6 +142,23 @@ const feats: Ends = {
      * - user_role
      */
     query: (params) => '',
+    /**
+     * component should render anchor tag to
+     * - /user
+     */
+    views: {
+      anchors: ['/user'],
+      elements: {
+        /** anchorsのリンクへのanchor要素 */
+        // [] todo
+        anchors: (): JSX.Element | undefined => {
+          for (const anchor of feats['post /user/register'].anchors) {
+            return <a href={anchor}>{anchor}</a>
+          }
+        },
+      },
+      // contain: ['<a href="/user">/user</a>'],
+    },
   },
 }
 
@@ -148,9 +179,10 @@ app
 
   .post(feats['post /user/register'].end, (c) => {
     return c.html(
-      <div>
-        <h1>hello post /user/register</h1>
-      </div>,
+      <>
+        <button type="button">Register</button>
+        {/* {feats['post /user/register'].views?.elements.anchors()} */}
+      </>,
     )
   })
 
