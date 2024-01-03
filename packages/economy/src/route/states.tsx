@@ -73,24 +73,19 @@ type BaseType = {
   error: object
   [key: string]: any
   component?: JSX.Element
+  query?: (params: any) => string
 }
 
-type GetType<T = any> = BaseType & {
-  query?: (params: T) => string
-}
+type GetType<T = any> = BaseType & {}
 
 type PostType = BaseType & {
-  validate: (c: Context) => void
-  query: any
+  validate?: (c: Context) => void
 }
 
-type DeleteType<T = any> = BaseType & {
-  query: (params: T) => string
-}
+type DeleteType<T = any> = BaseType & {}
 
 type PutType<T = any> = BaseType & {
   validate: (c: Context) => void
-  query: (params: T) => string
 }
 
 type Ends = {
@@ -111,12 +106,53 @@ const feats: Ends = {
     end: '/bank',
     error: {},
   },
+
+  /** */
+  'post /user/register': {
+    end: '/user/register',
+    /**
+     *
+     */
+    error: {},
+    validate: (c) => {
+      const { name, email } = c.req.parseBody()
+      if (!name || !email) {
+        throw new Error('name or email is empty')
+      }
+    },
+    /**
+     * @param c
+     * - email
+     * - user_id
+     * - user_name
+     * - user_role
+     */
+    query: (params) => '',
+  },
 }
 
 const app = new Hono()
-app.get(feats['get /bank'].end, (c) => {
-  return c.html(<components.GetBank />)
-})
+
+app
+  .notFound((c) => c.text('not found'))
+
+  .onError((e, c) => {
+    console.error(e)
+    c.status(500)
+    return c.text('on error')
+  })
+
+  .get(feats['get /bank'].end, (c) => {
+    return c.text('get /bank')
+  })
+
+  .post(feats['post /user/register'].end, (c) => {
+    return c.html(
+      <div>
+        <h1>hello post /user/register</h1>
+      </div>,
+    )
+  })
 
 export { feats, app, Ends }
 

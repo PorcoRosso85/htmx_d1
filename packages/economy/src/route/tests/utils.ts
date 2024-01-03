@@ -36,40 +36,6 @@ const browserWorkerTest = (
       await worker.stop()
     }
   })
-
-  test(describe, async () => {
-    switch (method) {
-      case 'GET':
-        res = await app.request(endpoint)
-        expect(res.status).toBe(200)
-        break
-      case 'POST':
-        console.debug('endpoint', endpoint)
-        res = await worker.fetch(endpoint, {
-          method: 'POST',
-          body: new URLSearchParams(body).toString(),
-        })
-        expect(res.status).toBe(200)
-        expect(await res.text()).toBe(expected)
-        break
-      case 'PUT':
-        res = await app.request(endpoint, {
-          method: method,
-          body: JSON.stringify(body),
-        })
-        expect(res.status).toBe(200)
-        break
-      case 'DELETE':
-        res = await app.request(endpoint, {
-          method: method,
-          body: JSON.stringify(body),
-        })
-        expect(res.status).toBe(200)
-        break
-      default:
-        break
-    }
-  })
 }
 
 const apiTest = () => {

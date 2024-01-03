@@ -156,8 +156,22 @@ export const tests: Test = {
       browserClient: {
         unitTests: [],
         uiUxTests: [],
-        browserWorkerConn: [],
+        browserWorkerConn: [
+          browserWorkerTest(
+            'post /user/register 200',
+            app,
+            '/user/register',
+            'POST',
+            {},
+            '<div><h1>hello post /user/register</h1></div>',
+          ),
+        ],
         notFound: [],
+        renderingContain: [
+          describe('ブラウザがレンダリングすべき項目を含めている', () => {
+            test('anchor link to /user/*', () => {})
+          }),
+        ],
       },
       webFramework: {
         frameworkFunctionalityTests: [
@@ -206,6 +220,7 @@ type InitialDevelopmentPhaseTests = {
     uiUxTests: TestFuncs // UI/UXテスト、初期モックアップの評価
     browserWorkerConn: TestFuncs // 追加: ブラウザとワーカー間の通信テスト
     notFound: TestFuncs // 追加: 404と500のテスト
+    renderingContain: TestFuncs
   }
   webFramework: {
     frameworkFunctionalityTests: TestFuncs // ルーティングやリクエスト処理の基本機能テスト
