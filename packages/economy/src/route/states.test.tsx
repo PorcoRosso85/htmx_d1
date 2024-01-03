@@ -67,10 +67,10 @@ const testFunctions: { [key: string]: TestFuncType } = {
       }
     })
 
-    test(`responseToContain ${toContain}`, async () => {
+    test(`responseToContain ${end} ${toContain}`, async () => {
       switch (method) {
         case 'GET':
-          console.debug('end', end)
+          // console.debug('end', end)
           res = await worker.fetch(end)
           // console.debug('res', res)
           // [] text合わない
@@ -99,7 +99,7 @@ const testFunctions: { [key: string]: TestFuncType } = {
 
       expect(res.status).toBe(200)
       expect(res.statusText).toBe('OK')
-      console.debug('toContain', toContain)
+      // console.debug('toContain', toContain)
       expect(await res.text()).toContain(toContain)
     })
   },
@@ -248,15 +248,21 @@ const testFunctions: { [key: string]: TestFuncType } = {
  * @returns [testFunction, testFunction, ...]
  */
 const testMap: TestMapType = {
-  /**
-   * example:
-   * 'get /bank': [browserWorkerConn, notFound, renderingContain],
-   */
-  // []メソッドを取得して入れるか
-  // 'get /bank': [testFunctions.browserWorkerConn],
-  'post /user/register': [
-    [testFunctions.browserWorkerConn, ['<button type="button">', 'Register', '<a', 'href="/user"']],
+  'get /': [
+    [
+      testFunctions.browserWorkerConn,
+      [
+        '<a',
+        'href="/user"',
+        'href="/bank"',
+        'href="/transaction"',
+        'href="/support"',
+        'hx-target="next main"',
+      ],
+    ],
   ],
+  // 'get /bank': [testFunctions.browserWorkerConn],
+  // 'post /user/register': [[testFunctions.browserWorkerConn, ['<a', 'href="/user"']]],
 }
 
 /**
@@ -269,7 +275,7 @@ const testFactory = (testMap: TestMapType): void => {
   const methodEnds = Object.keys(testMap)
   // extract testFunctions from testFunctionMap
   for (const methodEnd of methodEnds) {
-    console.debug('methodEnd', methodEnd)
+    // console.debug('methodEnd', methodEnd)
     const testFuncAndParams: TestFuncAndParamsType[] = testMap[methodEnd]
 
     for (const testFuncAndParam of testFuncAndParams) {

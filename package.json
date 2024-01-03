@@ -15,6 +15,7 @@
     "@hono/zod-validator": "^0.1.9",
     "@quantic/config": "workspace:^",
     "@quantic/durable-objects": "workspace:^",
+    "@quantic/economy": "workspace:^",
     "@quantic/insentive": "workspace:^",
     "@quantic/join": "workspace:^",
     "@quantic/todo": "workspace:^",

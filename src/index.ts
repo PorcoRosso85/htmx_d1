@@ -1,6 +1,7 @@
 import { doHonoApp } from '@quantic/durable-objects'
 import { serveStatic } from 'hono/cloudflare-workers'
 export { Counter } from '@quantic/durable-objects'
+import { app as economyHonoApp } from '@quantic/economy'
 import { insentiveHonoApp } from '@quantic/insentive'
 import { joinHonoApp } from '@quantic/join'
 import { todoHonoApp } from '@quantic/todo'
@@ -31,7 +32,7 @@ app
               <div class="p-4">
                 ${children}
               </div>
-              <script>
+              <!-- <script>
                 if ('serviceWorker' in navigator) {
                   navigator.serviceWorker.register('/static/sw.js', {scope: '/'}).then(function(registration) {
                     // 登録成功
@@ -41,7 +42,7 @@ app
                     console.log('ServiceWorker registration failed: ', error);
                   });
                 }
-              </script>
+              </script> -->
             </body>
           </html>
         `,
@@ -53,13 +54,17 @@ app
   .get('/', (c) =>
     c.render(html`
            <div hx-boost="true" hx-target="next div">
-                          <button type="button" hx-get="/todo">todo</button>
-                          <button type="button" hx-get="/join">join</button>
-                          <button type="button" hx-get="/insentive">insentive</button>
-                          <button type="button" hx-get="/do">do</button>
-                          <button type="button" hx-get=${typeboxHonoApp.endpoint}>typebox</button>
-                          <div />
+              <!-- <button type="button" hx-get="/todo">todo</button> -->
+              <!-- <button type="button" hx-get="/join">join</button> -->
+              <!-- <button type="button" hx-get="/insentive">insentive</button> -->
+              <!-- <button type="button" hx-get="/do">do</button> -->
+              <!-- <button type="button" hx-get=${typeboxHonoApp.endpoint}>typebox</button> -->
+              <div />
           </div>
+          <div hx-boost="true">
+            <a href="/eco" hx-target="main">eco</a>
+            <main />
+          </div>  
           `),
   )
 
@@ -79,10 +84,11 @@ app
 
   .get('/favicon', serveStatic({ path: './favicon.ico' }))
 
-  .route('/', todoHonoApp.app)
-  .route('/', joinHonoApp.app)
-  .route('/', insentiveHonoApp.app)
-  .route('/', doHonoApp.app)
-  .route('/', typeboxHonoApp.app)
+  // .route('/', todoHonoApp.app)
+  // .route('/', joinHonoApp.app)
+  // .route('/', insentiveHonoApp.app)
+  // .route('/', doHonoApp.app)
+  // .route('/', typeboxHonoApp.app)
+  .route('/eco', economyHonoApp)
 
 export default app

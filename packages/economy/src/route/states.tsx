@@ -10,7 +10,7 @@ import * as components from '../components'
 const states = {
   /**
    * from /
-   * to [/user, /notFound,/onError, /bank, /transaction]
+   * to [/user, /notFound,/onError, /bank, /transaction, /support]
    */
   'get /': {
     on: {
@@ -54,7 +54,7 @@ const states = {
 }
 
 export const nameOfMachine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QDcCWYDusAEBDAdhNmADZgC2Y+ALrAHQzXYD0AxIywK6xgBOdAJgAMQgNpCAuolAAHAPaxU1VHPzSQAD0QAWAGwBGQQICsQ3cb36A7AIDM2gDQgAnoisAOW3V3v92-fq2xrZCxhYAvuFOaJg4BESkFFS0dPKwTMzcfMy8YFCo6XysaRlZvDl5BdR8giLiUkggaUoqao1aCJZGpuaWNvZOrp0AnIYhugLWVla2trrzkVEg+HIQcOoxWHiExGSUNPCNzcqq6h0AtLqDiOfGdMMPw1bD7lb6QrPC2pHR6FvxuySBwYYAy6mOrTOiHsQjoniswX8QkCVh81wQHi8tgRAm02mM1gM7l0PxAmziO0S+xSHGYK2oADE5JxCOCFC1Tu1ENYscE-PZdHpUY4XIh5ro6NoTPpdFYhO5jFZtLZSeTtgk9sl6LTVABRXi8OS8NmKE5tUAdfTuWHDAS+YwCeYO-QEgTogK2uhy5FCJ7uZWvKyqv4UjVAmmgrg8Y1HdlmqEIXSjOgfQK2F0+QLGYbo7QvQT44byh5fF4kpZqgFUrWpBSlaMVfKFGOyOOQrkIARvOjBBEhYzW3H2Ky55MiESvbRK-RF1HB2LqwHU+glKPZTgyCC4aomjnmzTc7OSnzTGdfXECN2ijG4+4iGW23oz4zz-6UzXA1eZBtrMg72Omu2FrchMdDWL4U6TDYwzYiO16+N4CIiAILwvBYKoViGi7VsCtI8NQyj4FAu7xh2VoCJKxgTD4sy+ro9gikMfiwi6IgeBeoSzO4r6hkuNZfvhhFQMwuCcNQcgkUBB4IC6wxgaYyL+DB5i2Dm14BPY3RWmY0x2LMPHYR+EYZPSqAAGaoAAxtuUkQpywEyfM3jaGYU5yhMYS2O46ImFYYHju4jqKWY2IGVWRnapGzAAEYEAA1pJ9nSTOsKhDBqF+O4tq2O6yJ+V2BKoumHjcZhC7heGK51iwsX4HFzCWbk25gIl+6WkeCrptogZ2MSUroroQh+cMCmjJ4QR4mF76VbW6Q1fFmSbs1rUJi6fn4umql6MixLzLlCJeqY7wWCYHxSlNYbLrNGS1fVv6gi1AF7qtg1gW8WUBC6Qqoui-qGAqQi4vMTwoQSF18Z+1XMNQvAELAuCWWazDILgJCoBARr0itZGXnCHgooDoz4jY6Ije4cL3j65g+L64M4SkX4w3DCNIxAG5o9Z1QY7wWNPaRDnvIYzqvEmIPucY6IWHJU5HeYvgMcMdMRddLBM-g8OI60zBgBoYCWWJj2toBSWWiEPZ2iixIzNT+i5rYFEOkdl6TA81hKzNX5yDIVAiSQUBGkoAAW5AxbgiiWcwqhgAAKnIADy+CG00bYm4gCpwno7iBQSoxA9515FrC9umCY8vdVa7tXZ73v4L7-u8EHIcI5ZzI0KgREAMrUPEuC8BAsDMAAVjI+52W1iAOvcrymH28IuRL17YtoKYl7Mx3Wvilf8VDXs+6j9eNyJlktyyQldz3fcD1AJByLFJDYw5-XqfmHlsfYtpDRhvzldNV14Ru8heDUAfslZ4gh8bl2JB8LKV4hjpjuIqAkipOqDQsC+RYQA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QDcCWYDusAEBDAdhNmADZgC2Y+ALrAHQzXYD0AxIywK6xgBOdAJgAMQgNpCAuolAAHAPaxU1VHPzSQAD0QAWAGwBGQQICsQgMzGz2swE4h2gQHYANCACeiRwA4zdXV-1hf21tIS8vXQBfSNc0TBwCIlIKKlo6eVgmZm4+Zl4wKFRMvlYMrJzePIKi6j5BEXEpJBAMpRU1Zq0EPUMBE3NLazsHF3cdG0MzIV0TYwCrKZtomJB8OQg4dTisPEJiMkoaeGbW5VV1LoBaXVcPBGu6ESfnl8do2PQdxP2Uo4YwLLqU7tC6IKxCOg+RyWfS6KZCGxeW6eHx0MzQoTCMy6bxed4gbYJPbJQ5pDjMNbUABick4hCBCja506iH0jl8FjMgRsU28tjCyIQumFdAc2hsjhsM2hOLeK0JuySB1S9HJqgAorxeHJeAzFGcOqAuvovBCbAJ5gYBDzjMYnIL9PpzXRHE8ZtpAn1rPiFd8SSr-uUeLqToyDaChRNHlyzGYBBYAvozEixt1EYJtHMhLaTT4zD7PkSlb80mUuMGqoViiHZGGQSyEE5DJZobDYVK+im7uLDM8ndNk9pJVF5YXFT9SfQy9kK5wZBBcLU9UzDZpWcYbKL-NCs9MswJBY4BNpITYz+eJUfbAX4uP-X9pxVmBsyEvQ-r60bWTM6GyArMuQiaZtEFAI-EccVHFdJ1THREcPlvP1lT+ckeGoZR8CgZdwwbE0BFFYwZlMOxdBCOxRjufRQl-cUbCHR0Zi8Qiby+YlkNLBQsjQjCoGYXBOGoORsM-NcEH0Ddf1MEQqNsLwj10YwHSTE8+lMBx7CCHwWKLCcA3JSlUAAM1QABjRcROBZkvzEkVSOmeMhGHPQLUFExHEec85KYhSJQibS73Y1UARYAAjAgAGthKs0T+0eDdkylcUfEIh0hDZQQMTSqY2VtJZR0QtiSynTjQoi5gTPyRcwCi1djQkpiYzSkJ2WhLtEF0Ry6Dos8Nzcj1YX8pCivSErmDC-BwuyecqpqiNxPczMYwEHKEQ6ijWUc4wXSk5acSdQJBsKycRsyUqJufZI31rD9ouNDrf0cXNM2zO1rRA1MvA9SFaNCfaLWhQ7i2O6dqF4AhYFwEyDWYZBcBIVAIB1SlZtwvpIW8QI2QsEIBH8QUbDmF1PIRLkNwlQHdIfUbQfByHoYgOd4bM2pEd4ZH3xXOa0roO1c1IgmRHjRTU2McVRQgnlwjk2ZjAp+8ONO5gafwCGofaZgwA0MATIE6qOZw6ykwhO15kdWwh3ZQVrHwu1aIiHldAmPF8tYoGA2nOQZCoPiSCgHUlAAC3IMbcEUEzmFUMAABU5AAeXwPXrs5hsmO+-wOumaVbTMfGRDRY8pWzAwQmxOXApOrJPe9uG-d4QPg8hkzaRoVBMIAZWoRJcF4CBYGYAArGRV0s2rEDtLq5KHCxs18mxBXRE97DPPkhYTMvho9r38B92v674kym7pHiO67nu+6gEg5DCkgUeshwHXTd0pQgiIQix9fjtQud5F4ahb5iyUGV-ywnFGKCw89xI8wlsYSUlh0Tk2WEAA */
   id: 'views and elements',
   tsTypes: {} as import('./states.typegen').Typegen0,
   schema: {
@@ -74,10 +74,10 @@ type BaseType = {
   [key: string]: any
   component?: JSX.Element
   query?: (params: any) => string
-  views?: {
+  client?: {
     anchors: string[]
     elements: {
-      anchors: () => (JSX.Element | undefined) | (JSX.Element | undefined)[]
+      [key: string]: () => (JSX.Element | undefined) | (JSX.Element | undefined)[]
     }
     contain?: string[]
   }
@@ -109,6 +109,47 @@ type Ends = {
 
 // これにより、FeatsオブジェクトはStatesのキーのみを含むことが保証されます
 const feats: Ends = {
+  // const feats = {
+  'get /': {
+    end: '/',
+    error: {},
+
+    // []リロードしたときbody以外リロードさせなければ、bodyにhtml（あるいは局所的css, js）を追加するだけでいい、body=htmlにできる
+    client: {
+      anchors: ['/user', '/bank', '/transaction', '/support'],
+      elements: {
+        /**
+         * client側が持つ機能を一括で提供する
+         * 機能一覧
+         * - hx-boost
+         * - htmx preload extension
+         * - service-workerスクリプト, PWA
+         * - layout
+         */
+        root: () => {
+          return <></>
+        },
+        anchors: (): JSX.Element[] | undefined => {
+          return feats['get /'].client?.anchors.map((url, index) => (
+            <>
+              <a key={index.toString} href={url} hx-target="next main">
+                {url}
+              </a>
+              <br />
+              <main />
+            </>
+          ))
+        },
+        header: () => {
+          return (
+            <header>
+              <h1>Header</h1>
+            </header>
+          )
+        },
+      },
+    },
+  },
   'get /bank': {
     end: '/bank',
     error: {},
@@ -146,13 +187,13 @@ const feats: Ends = {
      * component should render anchor tag to
      * - /user
      */
-    views: {
+    client: {
       anchors: ['/user'],
       elements: {
         /** anchorsのリンクへのanchor要素 */
         // [] todo
         anchors: () => {
-          return feats['post /user/register'].views?.anchors.map((url, index) => (
+          return feats['post /user/register'].client?.anchors.map((url, index) => (
             <a key={index.toString} href={url}>
               {url}
             </a>
@@ -174,17 +215,16 @@ app
     return c.text('on error')
   })
 
+  .get(feats['get /'].end, (c) => {
+    return c.html(<>{feats['get /'].client?.elements.anchors()}</>)
+  })
+
   .get(feats['get /bank'].end, (c) => {
     return c.text('get /bank')
   })
 
   .post(feats['post /user/register'].end, (c) => {
-    return c.html(
-      <>
-        <button type="button">Register</button>
-        {feats['post /user/register'].views?.elements.anchors()}
-      </>,
-    )
+    return c.html(<>{feats['post /user/register'].client?.elements.anchors()}</>)
   })
 
 export { feats, app, Ends }
