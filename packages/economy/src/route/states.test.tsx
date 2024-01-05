@@ -23,7 +23,7 @@ import { feats } from './states'
 // []各keyの型を定義する
 const testFunctions: { [K in TestFunctionItems]: TestFunction } = {
   // 各testを書くのではなく、各describeについて書くことにした、要件次第ではtestに戻す
-  browserWorkerConn: ({ method, end, body }) => {
+  browserWorkerConn: ({ method, end, match, body }) => {
     let res: any
     let worker: UnstableDevWorker
 
@@ -76,8 +76,17 @@ const testFunctions: { [K in TestFunctionItems]: TestFunction } = {
 
       expect(res.status).toBe(200)
       expect(res.statusText).toBe('OK')
-      // console.debug('toContain', toContain)
-      expect(await res.text()).toContain(body)
+
+      switch (match) {
+        case 'toContain':
+          expect(await res.text()).toContain(body)
+          break
+        case 'toEqual':
+          expect(await res.text()).toEqual(body)
+          break
+        default:
+          break
+      }
     })
   },
 
@@ -405,7 +414,7 @@ const testFactory = (testMap: TestMap): void => {
         }
         // console.debug('func', func)
         // console.debug('match', match)
-        console.debug('params', params)
+        // console.debug('params', params)
 
         for (const p of params) {
           func({ method, end, match, body: p })
