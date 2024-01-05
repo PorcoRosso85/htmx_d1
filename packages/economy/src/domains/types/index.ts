@@ -3,6 +3,7 @@ import { createMachine } from 'xstate'
 
 export { GetType, PostType, DeleteType, PutType, Ends }
 export { TestFunctionItems, TestFunction, TestMap, TestTypeStates } from './test'
+export { LogLevelConst, LogEntry, LogLevel, logger } from './logger'
 
 import { states } from '../states'
 import { Query, QueryOperationType, TableFromTypeBox } from './util'
@@ -61,7 +62,7 @@ export const featsTypeStateMachine = createMachine({
 
 type BaseType = {
   end: string
-  error: object
+  error: LogCalling
   [key: string]: any
   component?: JSX.Element
   query?: Query
