@@ -1,52 +1,29 @@
 import path from 'path'
-import { Hono } from 'hono'
+import { Miniflare } from 'miniflare'
 /**
  * このファイルは
  * テスト関数を生成するファクトリー関数
  * 生成するためのテスト対象のマッピング定義
  * 生成するためのテスト一覧
  * を含みます。
+ * インポートする全オブジェクトはすでにテストが完了しているものとします
  */
-import { SuiteCollector, afterAll, beforeAll, describe, expect, test } from 'vitest'
+import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { unstable_dev } from 'wrangler'
 import type { UnstableDevWorker } from 'wrangler'
-import { Ends } from './states'
-
-type TestParamsType = {
-  method: string
-  end: string
-  body?: any
-  toContain?: string
-}
-
-type TestFuncParamsType = string[]
-
-type TestFuncType = (params: TestParamsType) => void | Promise<void>
-
-type TestFuncAndParamsType = [TestFuncType, TestFuncParamsType]
-
-type TestMapType = {
-  [K in keyof Ends]: TestFuncAndParamsType[]
-}
+import * as schema from '../dao/schema'
+import { TestFunction, TestFunctionItems, TestMap, TestTypeStates } from '../domains/types'
+import { Ends } from '../domains/types'
+import { feats } from './states'
 
 /**
  * 生成するためのテスト一覧
  * すべてのテストを含む
  */
 // []各keyの型を定義する
-const testFunctions: { [key: string]: TestFuncType } = {
-  /**
-   * libs
-   * 以下に定義するテストに使用される共通の変数や関数を定義する
-   */
-  // libs: {},
-  /**
-   * example:
-   * browserWorkerTest: (end: string) => void
-   */
-
-  // [] 各testを書くのではなく、各describeについて書くことにした、要件次第ではtestに戻す
-  browserWorkerConn: ({ method, end, toContain }) => {
+const testFunctions: { [K in TestFunctionItems]: TestFunction } = {
+  // 各testを書くのではなく、各describeについて書くことにした、要件次第ではtestに戻す
+  browserWorkerConn: ({ method, end, body }) => {
     let res: any
     let worker: UnstableDevWorker
 
@@ -67,7 +44,7 @@ const testFunctions: { [key: string]: TestFuncType } = {
       }
     })
 
-    test(`responseToContain ${end} ${toContain}`, async () => {
+    test(`responseToContain ${end} ${body}`, async () => {
       switch (method) {
         case 'GET':
           // console.debug('end', end)
@@ -100,145 +77,240 @@ const testFunctions: { [key: string]: TestFuncType } = {
       expect(res.status).toBe(200)
       expect(res.statusText).toBe('OK')
       // console.debug('toContain', toContain)
-      expect(await res.text()).toContain(toContain)
+      expect(await res.text()).toContain(body)
     })
   },
 
-  // e2e: [
-  //   test('異なるブラウザとデバイスでの表示の一貫性', () => {}),
-  //   test('レスポンシブデザイン', () => {}),
-  //   describe.skip('コンポーネント内部のrendering必須項目テスト', () => {
-  //     beforeAll(() => {
-  //       const jsdom = require('jsdom')
-  //       const { JSDOM } = jsdom
+  /** queryの単体テストであり、統合テストは別で行う */
+  // queryToMiniflareD1: async ({ body }) => {
+  //   const mf = new Miniflare({
+  //     name: 'main',
+  //     modules: true,
+  //     script: `
+  //                   export default {
+  //                   async fetch(request, env, ctx){
+  //                       return new Response('Hello World!');
+  //                   },};
+  //                   `,
+  //     d1Databases: ['D1'],
+  //   })
+  //   const d1db = await mf.getD1Database('D1')
 
-  //       const dom = new JSDOM()
-  //       global.document = dom.window.document
-  //       global.window = dom.window
-  //     })
+  //   // [] table should be added
+  //   const table = ''
+  //   // [] table should be added
+  //   const query = ''
+  //   // [] extract tableName from query
+  //   const tableName = ''
+  //   const ddl = schema.genDdl(table)
+  //   await d1db.exec(ddl)
 
-  //     test('GetBank returns a button for each endpoint', () => {
-  //       const endpoints = ['a', 'b', 'c']
+  //   /** genDdl関数の結合テスト */
+  //   test('assert table', async () => {
+  //     const { results } = await d1db.prepare('SELECT * FROM sqlite_master;').all()
+  //     const tableNames = results.map((result) => result.name)
+  //     expect(tableNames).toContain(tableName)
+  //   })
 
-  //       /**
-  //        * 仮にコンポーネントをインポートしたとする
-  //        * 下記はコンポーネントの例である
-  //        */
-  //       const GetBank = (endpoints) => {
-  //         const buttons = buttonComponents({ endpoints })
-  //         return (
-  //           <div>
-  //             {buttons.a}
-  //             {buttons.b}
-  //             {buttons.c}
-  //           </div>
-  //         )
+  //   describe('after table asserted...', async () => {
+  //     const { results } = await d1db.prepare(`PRAGMA table_info(${tableName});`).all()
+  //     const columnNames = results.map((result) => result.name)
+
+  //     test(`${tableName} column should be created`, async () => {
+  //       for (const columnName of columnNames) {
+  //         expect(columnNames).toContain(columnName)
   //       }
+  //       // // []手動のテスト
+  //       // expect(columnNames).toContain(toContain)
+  //     })
 
-  //       for (const endpoint of endpoints) {
-  //         console.debug('endpoint', endpoint)
+  //     describe('after column asserted...', async () => {
+  //       // [] extract queryOperation from query
+  //       const queryOperation = ''
+  //       switch (queryOperation) {
+  //         case 'insert':
+  //           beforeAll(async () => {
+  //             // [] query should be added
+  //             await d1db.prepare(query).run()
+  //           })
 
-  //         const { getByRole } = render(<GetBank endpoints={endpoints} />)
-  //         const button = getByRole('button')
+  //           test('query to contain expected', async () => {
+  //             // const query = `insert into user (user_id, user_name, user_role, email, created_at, other_info) values ('user_id', 'user_name', 'user_role', 'email', 'created_at', 'other_info');`
+  //             expect(query).toContain(toContain)
+  //           })
 
-  //         expect(button).toHaveAttribute('type', 'button')
+  //           test('validate inserted user.register', async () => {
+  //             const { results } = await d1db.prepare('SELECT * FROM user;').all()
+  //             expect(results.length).toEqual(1)
+  //             expect(results[0].email).toEqual('email')
+  //             expect(results[0].user_id).toEqual('user_id')
+  //             expect(results[0].user_name).toEqual('user_name')
+  //             expect(results[0].user_role).toEqual('user_role')
+  //           })
+  //           break
+  //         case 'update':
+  //           break
+  //         case 'delete':
+  //           break
+  //         case 'select':
+  //           break
+  //         default:
+  //           throw new Error('queryOperation is invalid')
   //       }
   //     })
+  //   })
 
-  //     test.skip('GetBank returns a button for each endpoint', () => {
-  //       const endpoints = ['a', 'b', 'c']
-  //       const buttons = buttonComponents({ endpoints })
-
-  //       for (const endpoint of endpoints) {
-  //         console.debug('endpoint', endpoint)
-
-  //         console.debug('buttons[endpoint]', buttons[endpoint])
-  //         const { getByRole } = render(buttons[endpoint])
-  //         const button = getByRole('button')
-
-  //         expect(button).toHaveAttribute('type', 'button')
-  //       }
+  //   describe('query is invalid', async () => {
+  //     test('if query is empty', async () => {
+  //       const query = ''
+  //       // [] should throw error
   //     })
 
-  //     describe.skip('compoA', () => {
-  //       const CompoA = () => {
-  //         return (
-  //           <div>
-  //             <h1>Endpoint A</h1>
-  //             <p>Access Endpoint B or C using the links below:</p>
-  //             <ul>
-  //               <li>
-  //                 <a href="/endpoint-b">Link to Endpoint B</a>
-  //               </li>
-  //               <li>
-  //                 <a href="/endpoint-c">Link to Endpoint C</a>
-  //               </li>
-  //             </ul>
-  //           </div>
-  //         )
-  //       }
+  //     test('if query is invalid', async () => {})
+  //   })
 
-  //       describe.skip('CompoA Component', () => {
-  //         test('contains links to Endpoint B and Endpoint C', () => {
-  //           render(<CompoA />)
+  //   describe('transaction', async () => {
+  //     test('transaction management', async () => {})
+  //   })
+  // },
 
-  //           const linkToB = screen.getByRole('link', { name: /link to endpoint b/i })
-  //           expect(linkToB).toBeInTheDocument()
-  //           expect(linkToB).toHaveAttribute('href', '/endpoint-b')
+  performanceOptimizationTests: () => {
+    test.skip('パフォーマンスの測定（レイテンシ、スループット）', async () => {
+      const start = performance.now()
 
-  //           const linkToC = screen.getByRole('link', { name: /link to endpoint c/i })
-  //           expect(linkToC).toBeInTheDocument()
-  //           expect(linkToC).toHaveAttribute('href', '/endpoint-c')
-  //         })
-  //       })
-  //     })
-  //   }),
-  //   // miniflareでシミュレーション不可能であり、dploy後に実施する
-  //   describe('ユーザーアクションからデータストレージまでの流れ', () => {
-  //     test('ハイドレーションが読み込まれている', () => {})
-  //     test('ヘッダーが認識されている', () => {})
-  //     test('ボタンが正しく設定されている', () => {
-  //       // ボタンが正しく設定されている
-  //     })
-  //   }),
+      // APIリクエストの実行
+      // deloy先にアクセスする
+      // const url = 'https://example.com'
+      // const app = new URL(url)
+      const response = await fetch(app, url)
+      const end = performance.now()
 
-  //   test.skip('パフォーマンスの測定（レイテンシ、スループット）', async () => {
-  //     const start = performance.now()
+      // レスポンスタイムの計測
+      const responseTime = end - start
 
-  //     // APIリクエストの実行
-  //     // deloy先にアクセスする
-  //     // const url = 'https://example.com'
-  //     // const app = new URL(url)
-  //     const response = await fetch(app, url)
-  //     const end = performance.now()
+      // レスポンスタイムが500ミリ秒未満であることを確認
+      expect(responseTime).toBeLessThan(500)
+    })
+  },
 
-  //     // レスポンスタイムの計測
-  //     const responseTime = end - start
+  e2e: () => {
+    test('異なるブラウザとデバイスでの表示の一貫性', () => {}),
+      test('レスポンシブデザイン', () => {}),
+      describe.skip('コンポーネント内部のrendering必須項目テスト', () => {
+        beforeAll(() => {
+          const jsdom = require('jsdom')
+          const { JSDOM } = jsdom
 
-  //     // レスポンスタイムが500ミリ秒未満であることを確認
-  //     expect(responseTime).toBeLessThan(500)
-  //   }),
-  // ],
+          const dom = new JSDOM()
+          global.document = dom.window.document
+          global.window = dom.window
+        })
 
-  // frameworkFunctionalityTests: [
-  //   test.skip('c.req.parseBody is working', async () => {
-  //     const req = new Request('/economy/user/register', {
-  //       method: 'POST',
-  //       // formの場合は, body: new URLSearchParams({
-  //       body: new URLSearchParams({
-  //         name: 'test',
-  //         email: 'test@mail.com',
-  //       }).toString(),
-  //       headers: {
-  //         'Content-Type': 'application/x-www-form-urlencoded',
-  //       },
-  //     })
+        test('GetBank returns a button for each endpoint', () => {
+          const endpoints = ['a', 'b', 'c']
 
-  //     const parsedBody = await req.body()
-  //     expect(parsedBody.name).toBe('test')
-  //     expect(parsedBody.email).toBe('test@mail.com')
-  //   }),
-  // ],
+          /**
+           * 仮にコンポーネントをインポートしたとする
+           * 下記はコンポーネントの例である
+           */
+          const GetBank = (endpoints) => {
+            const buttons = buttonComponents({ endpoints })
+            return (
+              <div>
+                {buttons.a}
+                {buttons.b}
+                {buttons.c}
+              </div>
+            )
+          }
+
+          for (const endpoint of endpoints) {
+            console.debug('endpoint', endpoint)
+
+            const { getByRole } = render(<GetBank endpoints={endpoints} />)
+            const button = getByRole('button')
+
+            expect(button).toHaveAttribute('type', 'button')
+          }
+        })
+
+        test.skip('GetBank returns a button for each endpoint', () => {
+          const endpoints = ['a', 'b', 'c']
+          const buttons = buttonComponents({ endpoints })
+
+          for (const endpoint of endpoints) {
+            console.debug('endpoint', endpoint)
+
+            console.debug('buttons[endpoint]', buttons[endpoint])
+            const { getByRole } = render(buttons[endpoint])
+            const button = getByRole('button')
+
+            expect(button).toHaveAttribute('type', 'button')
+          }
+        })
+
+        describe.skip('compoA', () => {
+          const CompoA = () => {
+            return (
+              <div>
+                <h1>Endpoint A</h1>
+                <p>Access Endpoint B or C using the links below:</p>
+                <ul>
+                  <li>
+                    <a href="/endpoint-b">Link to Endpoint B</a>
+                  </li>
+                  <li>
+                    <a href="/endpoint-c">Link to Endpoint C</a>
+                  </li>
+                </ul>
+              </div>
+            )
+          }
+
+          describe.skip('CompoA Component', () => {
+            test('contains links to Endpoint B and Endpoint C', () => {
+              render(<CompoA />)
+
+              const linkToB = screen.getByRole('link', { name: /link to endpoint b/i })
+              expect(linkToB).toBeInTheDocument()
+              expect(linkToB).toHaveAttribute('href', '/endpoint-b')
+
+              const linkToC = screen.getByRole('link', { name: /link to endpoint c/i })
+              expect(linkToC).toBeInTheDocument()
+              expect(linkToC).toHaveAttribute('href', '/endpoint-c')
+            })
+          })
+        })
+      })
+    // miniflareでシミュレーション不可能であり、dploy後に実施する
+    describe('ユーザーアクションからデータストレージまでの流れ', () => {
+      test('ハイドレーションが読み込まれている', () => {})
+      test('ヘッダーが認識されている', () => {})
+      test('ボタンが正しく設定されている', () => {
+        // ボタンが正しく設定されている
+      })
+    })
+  },
+
+  frameworkFunctionalityTests: () => {
+    test.skip('c.req.parseBody is working', async () => {
+      const req = new Request('/economy/user/register', {
+        method: 'POST',
+        // formの場合は, body: new URLSearchParams({
+        body: new URLSearchParams({
+          name: 'test',
+          email: 'test@mail.com',
+        }).toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      })
+
+      const parsedBody = await req.body()
+      expect(parsedBody.name).toBe('test')
+      expect(parsedBody.email).toBe('test@mail.com')
+    })
+  },
 }
 
 /**
@@ -247,128 +319,100 @@ const testFunctions: { [key: string]: TestFuncType } = {
  * @param end
  * @returns [testFunction, testFunction, ...]
  */
-const testMap: TestMapType = {
-  'get /': [
-    [
-      testFunctions.browserWorkerConn,
-      [
-        // 'hx-boost="true"',
-        '<a',
-        'href="/user"',
-        'href="/bank"',
-        'href="/transaction"',
-        'href="/support"',
-        'hx-target="next main"',
-        '<main>',
-      ],
+const testMap: TestMap = {
+  'get /': {
+    end: [
+      {
+        func: testFunctions.browserWorkerConn,
+        match: 'toContain',
+        params: [
+          // 'hx-boost="true"',
+          '<a',
+          'href="/user"',
+          'href="/bank"',
+          'href="/transaction"',
+          'href="/support"',
+          'hx-target="next main"',
+          '<main>',
+        ],
+      },
     ],
-  ],
-  // 'get /bank': [testFunctions.browserWorkerConn],
-  // 'post /user/register': [[testFunctions.browserWorkerConn, ['<a', 'href="/user"']]],
+  },
+
+  // 'post /user/register': [
+  //   [testFunctions.browserWorkerConn, { toContain: ['<a', 'href="/user"'] }],
+  //   [
+  //     testFunctions.queryToMiniflareD1,
+  //     {
+  //       query: [feats['post /user/register'].query.insert_user],
+  //       toContain: [
+  //         'insert',
+  //         'user',
+  //         'user_id',
+  //         'user_name',
+  //         'user_role',
+  //         'email',
+  //         'created_at',
+  //         'other_info',
+  //         'values',
+  //       ],
+  //     },
+  //   ],
+  // ],
 }
 
 /**
  * テスト関数を生成するファクトリー関数
- * @param end
+ * @param testMap
  * @returns void
+ *
+ * methodEndごと
+ * - eg. 'get /'
+ * 各機能ごと
+ * - eg. end, error, query
+ * 各機能のテストごと
+ * - eg. endの場合、
+ * - eg. func = testFunctions.browserWorkerConn
+ * - eg. match = toContain
+ * - eg. param = ['<a', 'href="/user"']
+ *
  */
-const testFactory = (testMap: TestMapType): void => {
+const testFactory = (testMap: TestMap): void => {
   // methodEndはtestFunctionMapのkey
   const methodEnds = Object.keys(testMap)
   // extract testFunctions from testFunctionMap
   for (const methodEnd of methodEnds) {
     // console.debug('methodEnd', methodEnd)
-    const testFuncAndParams: TestFuncAndParamsType[] = testMap[methodEnd]
+    const extractedEnd = (methodEnd) => {
+      return methodEnd.split(' ')
+    }
+    let [method, end] = extractedEnd(methodEnd)
+    method = method.toUpperCase()
 
-    for (const testFuncAndParam of testFuncAndParams) {
-      const testFunction: TestFuncType = testFuncAndParam[0]
-      const testFuncParams: TestFuncParamsType = testFuncAndParam[1]
+    // extract testFunctions from testFunctionMap
+    const featItems = Object.keys(testMap[methodEnd])
+    for (const featItem of featItems) {
+      // console.debug('featItem', featItem)
+      const testFunctions = testMap[methodEnd][featItem]
+      console.debug('testFunctions: ', testFunctions)
 
-      const extractedEnd = (methodEnd) => {
-        return methodEnd.split(' ')
-      }
-      let [method, end] = extractedEnd(methodEnd)
-      // uppercase of method
-      method = method.toUpperCase()
-      for (const toContain of testFuncParams) {
-        // console.debug('toContain', toContain)
-        testFunction({ method, end, toContain })
+      for (const testFunction of testFunctions) {
+        // console.debug('testFunction', testFunction)
+        const { func, match, params } = testFunction as {
+          func: TestFunction
+          match: string
+          params: string[]
+        }
+        // console.debug('func', func)
+        // console.debug('match', match)
+        console.debug('params', params)
+
+        for (const p of params) {
+          func({ method, end, match, body: p })
+        }
       }
     }
   }
 }
 
 testFactory(testMap)
-
-type Test = {
-  [K in keyof Ends]: {
-    initial: InitialDevelopmentPhaseTests
-    mid?: MidDevelopmentPhaseTests
-    preRelease?: PreReleasePhaseTests
-    operation?: OperationPhaseTests
-  }
-}
-
-type InitialDevelopmentPhaseTests = {
-  browserClient: {
-    unitTests: TestFuncs // コンポーネントや機能のユニットテスト
-    uiUxTests: TestFuncs // UI/UXテスト、初期モックアップの評価
-    browserWorkerConn: TestFuncs // 追加: ブラウザとワーカー間の通信テスト
-    notFound: TestFuncs // 追加: 404と500のテスト
-    renderingContain: TestFuncs
-  }
-  webFramework: {
-    frameworkFunctionalityTests: TestFuncs // ルーティングやリクエスト処理の基本機能テスト
-    moduleIntegrationTests: TestFuncs // 他のライブラリやモジュールとの統合テスト
-  }
-  infrastructure: {
-    basicPerformanceTests: TestFuncs // Cloudflare Workersの基本パフォーマンステスト
-  }
-}
-
-type MidDevelopmentPhaseTests = {
-  browserClient: {
-    crossBrowserTesting: TestFuncs // 異なるブラウザでの動作テスト
-    accessibilityTests: TestFuncs // アクセシビリティテスト
-    e2e: TestFuncs // ユーザーのシナリオに沿ったE2Eテスト
-  }
-  webFramework: {
-    apiIntegrationTests: TestFuncs // 外部APIとの統合テスト
-    errorHandlingTests: TestFuncs // エラー処理テスト
-  }
-  infrastructure: {
-    loadTesting: TestFuncs // 負荷テスト
-    securityTesting: TestFuncs // セキュリティテスト（XSS、CSRFなど）
-  }
-}
-
-type PreReleasePhaseTests = {
-  browserClient: {
-    performanceOptimizationTests: TestFuncs // パフォーマンス最適化テスト
-    finalUserTesting: TestFuncs // 最終ユーザーテスト
-    crossDeviceConsistencyTests: TestFuncs // 追加: 異なるブラウザとデバイスでの表示の一貫性テスト
-  }
-  webFramework: {
-    stressTesting: TestFuncs // ストレステスト
-    finalIntegrationTesting: TestFuncs // 最終統合テスト
-  }
-  infrastructure: {
-    disasterRecoveryTests: TestFuncs // 災害復旧テスト
-    scalingTests: TestFuncs // スケーリングテスト
-  }
-}
-
-type OperationPhaseTests = {
-  browserClient: {
-    continuousMonitoring: TestFuncs // 継続的なモニタリング
-    userFeedbackAnalysis: TestFuncs // ユーザーフィードバック分析
-  }
-  webFramework: {
-    dependencyUpdateTests: TestFuncs // 依存関係更新テスト
-    performanceMonitoring: TestFuncs // パフォーマンスモニタリング
-  }
-  infrastructure: {
-    infrastructureAudit: TestFuncs // 基盤の監査
-    complianceTesting: TestFuncs // コンプライアンステスト
-  }
-}

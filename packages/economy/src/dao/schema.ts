@@ -4,8 +4,6 @@
  *
  */
 import { type Static, Type } from '@sinclair/typebox'
-import Ajv from 'ajv'
-import addFormats from 'ajv-formats'
 
 /**
  * T containes the schema of the table, and all of column name
@@ -122,12 +120,13 @@ const transactionTableTypeBox = {
  * Type.Number({ minimum: 0, maximum: 1000000000 }) => INTEGER
  * etc.
  */
-const genDdl = (typebox: any) => {
-  let ddl = `CREATE TABLE ${typebox.tableName} (`
+// [] genDdlがもとめる引数の型を定義する
+const genDdl = (typeboxTableDefinition: any) => {
+  let ddl = `CREATE TABLE ${typeboxTableDefinition.tableName} (`
 
-  const columns = Object.keys(typebox.columns.properties)
+  const columns = Object.keys(typeboxTableDefinition.columns.properties)
   const columnDefs = columns.map((column) => {
-    const typeDef = typebox.columns.properties[column]
+    const typeDef = typeboxTableDefinition.columns.properties[column]
     let sqliteType = ''
 
     if (typeDef.type === 'string') {
