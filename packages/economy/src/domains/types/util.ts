@@ -1,6 +1,9 @@
 export { Query, QueryOperationType, TableFromTypeBox }
 
-type Query = (params: any) => string
+// type Query = (params: any) => string | string[]
+type Query = {
+  [key: string]: (params: any) => string | string[]
+}
 
 type QueryOperationType = (tableFromTypeBox: TableFromTypeBox) => string
 

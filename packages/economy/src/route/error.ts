@@ -1,4 +1,4 @@
-function handleServerError(errorCode) {
+const getErrorCode = (error: any) => {
   switch (errorCode) {
     // 500を返すケース
     case 500:

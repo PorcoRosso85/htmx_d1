@@ -1,16 +1,33 @@
-import { Hono } from 'hono'
-import { Ends } from '../domains/types'
+import { Bindings } from '@quantic/config'
+import { Context, Hono } from 'hono'
+import { Ends, LogLevel, LogLevelConst, logger } from '../domains/types/feats'
+
+const app = new Hono<{ Bindings: Bindings }>()
 
 // これにより、FeatsオブジェクトはStatesのキーのみを含むことが保証されます
-const feats: Ends = {
-  // const feats = {
+// const feats: Ends = {
+const feats = {
+  notFound: {
+    end: 'notfound',
+    error: {},
+  },
+
+  onError: {
+    end: 'onerror',
+    error: {},
+  },
+
   /**
    * /user, /bank, /transaction, /support機能のトリガーを提供する
    * トリガーは、各エンドポイントへのアンカー要素
    */
   'get /': {
     end: '/',
-    error: {},
+    error: {
+      ROOT_NOT_FOUND: 'Root component not found',
+      ANCHORS_NOT_FOUND: 'Anchors not found',
+      RENDER_ERROR: 'Error occurred while rendering',
+    },
 
     // []リロードしたときbody以外リロードさせなければ、bodyにhtml（あるいは局所的css, js）を追加するだけでいい、body=htmlにできる
     client: {
@@ -49,6 +66,22 @@ const feats: Ends = {
           )
         },
       },
+    },
+    handler: async (c: Context) => {
+      const RootCompo = feats['get /'].client?.elements.Root
+      return RootCompo !== undefined
+        ? c.render(
+            <div hx-target="next main">
+              <RootCompo>{feats['get /'].client?.elements.anchors()}</RootCompo>
+              <main />
+            </div>,
+          )
+        : // エラーならhonoのエラーハンドラーに任せる:w
+          logger({
+            level: LogLevelConst.ERROR,
+            message: feats['get /'].error.ROOT_NOT_FOUND,
+            timestamp: Date.now(),
+          })
     },
   },
 
@@ -109,46 +142,92 @@ const feats: Ends = {
       },
     },
   },
+
   'get /bank': {
     end: '/bank',
     error: {},
   },
+
+  'get /transaction': {
+    end: '/transaction/:from/:to',
+    error: {},
+    query: {
+      insert_transaction: (params) => [
+        `insert into transaction (from) values (${params.from})`,
+        `insert into transaction (to) values (${params.to})`,
+      ],
+    },
+    handler: async (c: Context<{ Bindings: Bindings }>) => {
+      const { from, to } = c.req.param()
+      const query = feats['get /transaction'].query.insert_transaction({
+        from,
+        to,
+      })
+      // query: string[], then, generate db.prepare(query[0]), db.prepare(query[1])
+      // await c.env.D1DB.batch([c.env.D1DB.prepare(query[0]), c.env.D1DB.prepare(query[1])])
+      // refactor
+      for (const q of query) {
+        await c.env.D1DB.batch([c.env.D1DB.prepare(q)])
+      }
+
+      // check insert result
+      const result = await c.env.D1DB.prepare('select * from transaction').run()
+
+      return c.json(result)
+    },
+  },
 }
 
-const app = new Hono()
+app.get('/', async (c) => {
+  const result = await c.D1DB.query('select * from user')
+})
+// app
+//   .notFound((c) => c.text('not found'))
 
-app
-  .notFound((c) => c.text('not found'))
+//   .onError((e, c) => {
+//     console.error(e)
+//     c.status(500)
+//     return c.text('on error')
+//   })
 
-  .onError((e, c) => {
-    console.error(e)
-    c.status(500)
-    return c.text('on error')
-  })
+//   .get(feats['get /'].end, feats['get /'].handler)
 
-  .get(feats['get /'].end, (c) => {
-    const RootCompo = feats['get /'].client?.elements.Root
-    return RootCompo !== undefined
-      ? c.render(
-          <div hx-target="next main">
-            <RootCompo>{feats['get /'].client?.elements.anchors()}</RootCompo>
-            <main />
-          </div>,
-        )
-      : console.error('RootCompo is undefined')
-  })
+//   .get(feats['get /user'].end, (c) => {
+//     return c.text('get /user')
+//   })
 
-  .get(feats['get /user'].end, (c) => {
-    return c.text('get /user')
-  })
+//   .get(feats['get /bank'].end, (c) => {
+//     return c.text('get /bank')
+//   })
 
-  .get(feats['get /bank'].end, (c) => {
-    return c.text('get /bank')
-  })
+//   .post(feats['post /user/register'].end, (c) => {
+//     return c.html(<>{feats['post /user/register'].client?.elements.anchors()}</>)
+//   })
 
-  .post(feats['post /user/register'].end, (c) => {
-    return c.html(<>{feats['post /user/register'].client?.elements.anchors()}</>)
-  })
+const entries = Object.entries(feats) // output: [ [ 'notFound', { end: 'notfound', error: {} } ], [ 'onError', { end: 'onerror', error: {} } ], [ 'get /', { end: '/', error: [Object], client: [Object], handler: [Function: handler] } ], [ 'get /user', { end: '/user', error: {}, client: [Object] } ], [ 'post /user/register', { end: '/user/register', error: {}, validate: [Function: validate], query: [Object], client: [Object] } ], [ 'get /bank', { end: '/bank', error: {} } ] ]
+// Object.entries(feats).forEach(([path, config]) => {
+for (const [path, config] of entries) {
+  const { method, end } = path.split(' ')
+
+  if (method && end) {
+    switch (method.toLowerCase()) {
+      case 'get':
+        app.get(end, config.handler)
+        break
+      case 'post':
+        app.post(end, config.handler)
+        break
+      case 'put':
+        app.put(end, config.handler)
+        break
+      case 'delete':
+        app.delete(end, config.handler)
+        break
+      default:
+        break
+    }
+  }
+}
 
 export { feats, app }
 

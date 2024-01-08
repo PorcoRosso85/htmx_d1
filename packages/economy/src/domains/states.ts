@@ -8,6 +8,10 @@ export { states }
  * webサーバーにエンドポイントを登録できません
  */
 const states = {
+  /** hono returns 404 */
+  notFound: {},
+  /** hono returns 500 */
+  onError: {},
   /**
    * from /
    * to [/user, /bank, /transaction, /support]
@@ -20,12 +24,6 @@ const states = {
       'get /support.200': 'get /support',
     },
   },
-
-  /** hono returns 404 */
-  'get /notFound': {},
-
-  /** hono returns 500 */
-  'get /onError': {},
 
   /**
    * from /user

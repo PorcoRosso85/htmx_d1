@@ -12,8 +12,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 import { unstable_dev } from 'wrangler'
 import type { UnstableDevWorker } from 'wrangler'
 import * as schema from '../dao/schema'
-import { TestFunction, TestFunctionItems, TestMap, TestTypeStates } from '../domains/types'
-import { Ends } from '../domains/types'
+import { TestFunction, TestFunctionItems, TestMap, TestTypeStates } from '../domains/types/feats'
+import { Ends } from '../domains/types/feats'
 import { feats } from './states'
 
 /**
@@ -50,7 +50,6 @@ const testFunctions: { [K in TestFunctionItems]: TestFunction } = {
           // console.debug('end', end)
           res = await worker.fetch(end)
           // console.debug('res', res)
-          // [] text合わない
           break
         case 'POST':
           res = await worker.fetch(end, {

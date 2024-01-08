@@ -8,4 +8,4 @@ export {
   DeleteType,
   PutType,
   Ends,
-} from './types'
+} from './types/feats'

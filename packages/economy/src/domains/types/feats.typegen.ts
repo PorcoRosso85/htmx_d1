@@ -17,20 +17,15 @@ export interface Typegen0 {
   eventsCausingGuards: {}
   eventsCausingServices: {}
   matchesStates:
-    | 'AnyMethodEnd'
+    | 'BaseType'
     | 'Context'
-    | 'DeleteMethodEnd'
-    | 'GetMethodEnd'
-    | 'HandlerOfHonoEndpoint'
-    | 'MethodEnds'
-    | 'ParamsForTestFunction'
-    | 'PostMethodEnd'
-    | 'PutMethodEnd'
-    | 'QueryStringToDatabase'
-    | 'TestFactory'
-    | 'TestFunction'
-    | 'TestFunctionItems'
-    | 'TestFunctionsObject'
-    | 'TestsMap'
+    | 'DeleteType'
+    | 'Ends'
+    | 'GetType'
+    | 'PostType'
+    | 'PutType'
+    | 'Query'
+    | 'QueryOperation'
+    | 'TableFromTypeBox'
   tags: never
 }

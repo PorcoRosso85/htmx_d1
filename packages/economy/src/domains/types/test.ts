@@ -1,7 +1,7 @@
 import { createMachine } from 'xstate'
 
 export { TestFunctionItems, TestFunction, TestMap, TestTypeStates }
-import { Ends } from '.'
+import { Ends } from './feats'
 import { Query, QueryOperationType, TableFromTypeBox } from './util'
 
 const testTypeStates = {
@@ -224,25 +224,6 @@ const testItems = {
     infrastructure: {
       infrastructureAudit: '', // 基盤の監査
       complianceTesting: '', // コンプライアンステスト
-    },
-  },
-}
-
-const implTests: TestTypeStates = {
-  TestMap: {
-    on: {
-      key: {} as TestFunction,
-    },
-  },
-  TestFunction: {
-    on: {
-      type: {} as Query,
-    },
-  },
-  Query: {},
-  void: {
-    on: {
-      'testFactory()': '',
     },
   },
 }
